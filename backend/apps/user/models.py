@@ -55,3 +55,20 @@ class Insurance(db.Model):
     
     def __repr__(self):
         return f"Insurance({self.insured_amount})"
+
+class Blacklist(db.Model):
+    __tablename__ = 'blacklist'
+
+    id = db.Column(db.Integer, primary_key = True)
+    email_address = db.Column(db.String(60), index=True, unique=True, nullable=False)
+    reason = db.Column(db.String(100))
+
+    def __init__(self, email_address, reason):
+        self.email_address = email_address
+        self.reason = reason
+
+    def __str__(self):
+        return f"{self.email_address}"
+    
+    def __repr__(self):
+        return f"Blacklist Email({self.email_address})"

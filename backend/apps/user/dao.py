@@ -1,5 +1,5 @@
 from apps import db
-from apps.user.models import User, InsurancePlan, Insurance
+from apps.user.models import User, InsurancePlan, Insurance, Blacklist
 
 
 class InsuranceDBDao():
@@ -45,7 +45,7 @@ class InsuranceDBDao():
             db.session.add(insurance_plan)
             db.session.add(insurance)
 
-        # return insurance
+        return insurance
     
 
 class UserDao:
@@ -121,3 +121,45 @@ class InsuranceDao:
                 )
 
         return insurance
+
+
+class BlacklistDao:
+    @staticmethod
+    def add_blacklist(
+            email_address: str,
+            reason: str
+            ) -> Blacklist:
+        """
+        Create new blacklisted email in database.
+
+        Args:
+            email_address (str): Email address of the customer
+            reason (str): Reason for blacklisting
+
+        Returns:
+            Blacklist: newly created blacklist object
+        """
+        blacklist = Blacklist(
+                    email_address = email_address,
+                    reason = reason
+                )
+        
+        db.session.add(blacklist)
+        db.session.commit()
+
+        return blacklist
+    
+    @staticmethod
+    def get_blacklist_by_email(
+            email_address: str
+            ) -> bool:
+        """
+        Find if given email id is blacklisted in database.
+
+        Args:
+            email_address (str): Email address of the customer
+
+        Returns:
+            bool: Whether or not given user id is blacklisted
+        """
+        return db.session.query(Blacklist.id).filter_by(email_address=email_address).first() is not None

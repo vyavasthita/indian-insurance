@@ -1,9 +1,10 @@
 from flask.blueprints import Blueprint
-from flask import render_template, redirect, url_for, request
-from apps.user.forms import UserRegistrationForm
-from apps.user.dao import InsuranceDBDao
+from flask import render_template, request, jsonify
+
+from apps.user.dao import InsuranceDBDao, BlacklistDao
 from utils.password_helper import PasswordGenerator
 from apps import configuration
+import json
 
 
 user_blueprint = Blueprint(name='user', import_name=__name__, 
@@ -11,6 +12,16 @@ user_blueprint = Blueprint(name='user', import_name=__name__,
                            url_prefix='/user'
                 )
 
+
+def check_blacklisting(func):
+    def wrapper(*args, **kwargs):
+        input_data = json.loads(request.data.decode('utf-8'))
+
+        if BlacklistDao.get_blacklist_by_email(email_address = input_data['email_address']):
+            return {'Error': 'You are not allowed to create an account with us.'}, 422
+        
+        return func(*args, **kwargs)
+    return wrapper
 
 @user_blueprint.route("/home", methods = ['GET'])
 def home():
@@ -23,7 +34,9 @@ def home():
     """
     return render_template('home.html')
 
-@user_blueprint.route("/register", methods = ['GET', 'POST'])
+
+@user_blueprint.route("/register", methods = ['POST'])
+@check_blacklisting
 def register():
     """
     This is the user registration api endpoint.
@@ -32,36 +45,34 @@ def register():
     Returns:
         response: Status code and message in Json format
     """
-    if request.method == 'POST':
-        content_type = request.headers.get('Content-Type')
-        if content_type == 'application/json':
-            json = request.json
-        elif content_type == 'application/x-www-form-urlencoded':
-            pass
+    print("Register method is called...")
+    input_data = None
 
-    form = UserRegistrationForm()
+    content_type = request.headers.get('Content-Type')
 
-    if form.validate_on_submit():
-        customer_name = form.customer_name.data
-        email_address = form.email_address.data
-        insurance_plan_name = form.insurance_plan_name.data
-        insured_amount = form.insured_amount.data
+    if content_type == 'application/json':
+        input_data = json.loads(request.data.decode('utf-8'))
+    else:
+        return {"Error": 'Content type is not supported.'}
+    
+    customer_name = input_data['customer_name']
+    email_address = input_data['email_address']
+    insurance_plan_name = input_data['insurance_plan_name']
+    insured_amount = input_data['insured_amount']
 
-        password_generator = PasswordGenerator(configuration.PASSWORD_LENGTH)
-        
-        password = password_generator.generate_password()
+    password_generator = PasswordGenerator(configuration.PASSWORD_LENGTH)
+    
+    password = password_generator.generate_password()
 
-        insurance_info = InsuranceDBDao.add_user_insurance(
-            customer_name = customer_name,
-            email_address = email_address,
-            password = password,
-            insurance_plan_name = insurance_plan_name,
-            insured_amount = insured_amount            
-        )
+    insurance_info = InsuranceDBDao.add_user_insurance(
+        customer_name = customer_name,
+        email_address = email_address,
+        password = password,
+        insurance_plan_name = insurance_plan_name,
+        insured_amount = insured_amount            
+    )
 
-        return redirect(url_for('user.post_registration'))
-
-    return render_template('register.html', form = form)
+    return jsonify({'msg': 'some value'})
 
 @user_blueprint.route("/post_registration", methods = ['GET'])
 def post_registration():
