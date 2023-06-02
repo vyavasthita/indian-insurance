@@ -1,8 +1,7 @@
 from flask.blueprints import Blueprint
 from flask import render_template, redirect, url_for
-from apps.user.models import User
 from apps.user.forms import UserRegistrationForm
-from apps.user.dao import user_dao
+from apps.user.dao import InsuranceDBDao
 
 
 user_blueprint = Blueprint(name='user', import_name=__name__, 
@@ -32,6 +31,7 @@ def register():
         response: Status code and message in Json format
     """
     form = UserRegistrationForm()
+    password = "something" # to be randomly generated
 
     if form.validate_on_submit():
         customer_name = form.customer_name.data
@@ -39,12 +39,12 @@ def register():
         insurance_plan_name = form.insurance_plan_name.data
         insured_amount = form.insured_amount.data
 
-        # Update database with new user
-        user = user_dao.create_user(
-            customer_name, 
-            email_address, 
-            insurance_plan_name, 
-            insured_amount
+        insurance_info = InsuranceDBDao.add_user_insurance(
+            customer_name = customer_name,
+            email_address = email_address,
+            password = password,
+            insurance_plan_name = insurance_plan_name,
+            insured_amount = insured_amount            
         )
 
         return redirect(url_for('user.post_registration'))
