@@ -16,4 +16,7 @@ class User(db.Model):
         self.insured_amount = insured_amount
 
     def __str__(self):
-        return f"{self.email_address}"
+        return f"{self.customer_name}"
+    
+    def __repr__(self):
+        return f"<Customer({self.customer_name})"

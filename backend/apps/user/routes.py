@@ -5,8 +5,22 @@ from apps.user.forms import UserRegistrationForm
 from apps.user.dao import user_dao
 
 
-user_blueprint = Blueprint(name='user', import_name=__name__, template_folder='templates/user')
+user_blueprint = Blueprint(name='user', import_name=__name__, 
+                           template_folder='templates/user',
+                           url_prefix='/user'
+                )
 
+
+@user_blueprint.route("/home", methods = ['GET'])
+def home():
+    """
+    This is the user home.
+    This page is shown when user opens the url first.
+
+    Returns:
+        response: Status code and message in Json format
+    """
+    return render_template('home.html')
 
 @user_blueprint.route("/register", methods = ['GET', 'POST'])
 def register():

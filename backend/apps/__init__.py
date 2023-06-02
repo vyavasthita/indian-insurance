@@ -10,7 +10,7 @@ migrate = Migrate(app=app, db=db)
 
 from apps.user.routes import user_blueprint
 
-app.register_blueprint(user_blueprint, url_prefix='/user')
+app.register_blueprint(user_blueprint)
 
 @app.get("/")
 def home():
