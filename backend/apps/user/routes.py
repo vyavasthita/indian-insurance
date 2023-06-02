@@ -1,7 +1,9 @@
 from flask.blueprints import Blueprint
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, request
 from apps.user.forms import UserRegistrationForm
 from apps.user.dao import InsuranceDBDao
+from utils.password_helper import PasswordGenerator
+from apps import configuration
 
 
 user_blueprint = Blueprint(name='user', import_name=__name__, 
@@ -30,14 +32,24 @@ def register():
     Returns:
         response: Status code and message in Json format
     """
+    if request.method == 'POST':
+        content_type = request.headers.get('Content-Type')
+        if content_type == 'application/json':
+            json = request.json
+        elif content_type == 'application/x-www-form-urlencoded':
+            pass
+
     form = UserRegistrationForm()
-    password = "something" # to be randomly generated
 
     if form.validate_on_submit():
         customer_name = form.customer_name.data
         email_address = form.email_address.data
         insurance_plan_name = form.insurance_plan_name.data
         insured_amount = form.insured_amount.data
+
+        password_generator = PasswordGenerator(configuration.PASSWORD_LENGTH)
+        
+        password = password_generator.generate_password()
 
         insurance_info = InsuranceDBDao.add_user_insurance(
             customer_name = customer_name,

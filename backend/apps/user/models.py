@@ -7,7 +7,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     customer_name = db.Column(db.String(40), nullable=False)
     email_address = db.Column(db.String(60), index=True, unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(100), unique=True, nullable=False)
     insurances = db.relationship('Insurance', backref='user', lazy='dynamic')
 
     def __init__(self, customer_name, email_address, password):
@@ -20,7 +20,7 @@ class User(db.Model):
     
     def __repr__(self):
         return f"Customer({self.customer_name})"
-    
+
 class InsurancePlan(db.Model):
     __tablename__ = 'insuranceplan'
 
