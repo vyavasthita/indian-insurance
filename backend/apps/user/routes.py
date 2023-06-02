@@ -2,7 +2,7 @@ from flask.blueprints import Blueprint
 from flask import render_template, redirect, url_for
 from apps.user.models import User
 from apps.user.forms import UserRegistrationForm
-from apps import db
+from apps.user.dao import user_dao
 
 
 user_blueprint = Blueprint(name='user', import_name=__name__, template_folder='templates/user')
@@ -25,15 +25,14 @@ def register():
         insurance_plan_name = form.insurance_plan_name.data
         insured_amount = form.insured_amount.data
 
-        user = User(
-                    customer_name = customer_name,
-                    email_address = email_address,
-                    insurance_plan_name = insurance_plan_name,
-                    insured_amount = insured_amount,
-                )
-        db.session.add(user)
-        db.session.commit()
-        
+        # Update database with new user
+        user = user_dao.create_user(
+            customer_name, 
+            email_address, 
+            insurance_plan_name, 
+            insured_amount
+        )
+
         return redirect(url_for('user.post_registration'))
 
     return render_template('register.html', form = form)
