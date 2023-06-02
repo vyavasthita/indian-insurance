@@ -9,7 +9,9 @@ class Config:
     """
     Main Configuration file for the application.
     """
-
+    # To be used by Flask Form (WTF package)
+    SECRET_KEY = 'not really a secret'
+    
     # DATABASE url to be connected by the app
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL') or 'sqlite:///' + os.path.join(base_dir, 'insurance.db')
     
