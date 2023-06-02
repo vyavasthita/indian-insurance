@@ -9,6 +9,7 @@ class User(db.Model):
     email_address = db.Column(db.String(60), index=True, unique=True, nullable=False)
     password = db.Column(db.String(100), unique=True, nullable=False)
     insurances = db.relationship('Insurance', backref='user', lazy='dynamic')
+    userprofiles = db.relationship('UserProfile', backref='customerprofile', lazy='dynamic')
 
     def __init__(self, customer_name, email_address, password):
         self.customer_name = customer_name
@@ -21,6 +22,23 @@ class User(db.Model):
     def __repr__(self):
         return f"Customer({self.customer_name})"
 
+class UserProfile(db.Model):
+    __tablename__ = 'userprofile'
+
+    id = db.Column(db.Integer, primary_key = True)
+    activation_status = db.Column(db.String(10), nullable=False)
+    user_profile_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def __init__(self, activation_status, customerprofile):
+        self.activation_status = activation_status
+        self.customerprofile = customerprofile
+
+    def __str__(self):
+        return f"{self.activation_status}"
+    
+    def __repr__(self):
+        return f"UserProfile({self.activation_status})"
+    
 class InsurancePlan(db.Model):
     __tablename__ = 'insuranceplan'
 
@@ -35,7 +53,7 @@ class InsurancePlan(db.Model):
         return f"{self.insurance_plan_name}"
     
     def __repr__(self):
-        return f"Insurance Plan({self.insurance_plan_name})"
+        return f"InsurancePlan({self.insurance_plan_name})"
     
 class Insurance(db.Model):
     __tablename__ = 'insurance'

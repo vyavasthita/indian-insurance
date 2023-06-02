@@ -1,5 +1,5 @@
 from apps import db
-from apps.user.models import User, InsurancePlan, Insurance, Blacklist
+from apps.user.models import User, UserProfile, InsurancePlan, Insurance, Blacklist
 
 
 class InsuranceDBDao():
@@ -9,7 +9,8 @@ class InsuranceDBDao():
             email_address: str,
             password: str,
             insurance_plan_name: str,
-            insured_amount: int
+            insured_amount: int,
+            activation_status: str = 'pending'
     ) -> Insurance:
         """
         Create new record in DB when user signs up.
@@ -20,6 +21,7 @@ class InsuranceDBDao():
             password (str): Random generated password
             insurance_plan_name (str): Insurance plan name chosen by customer
             insured_amount (int): Insured amount chosen by customer
+            activation_status (str): Activation status of customer. Default is 'pending'.
 
         Returns:
             Insurance: Newly created insurance object
@@ -30,6 +32,11 @@ class InsuranceDBDao():
                     password = password
                 )
 
+        user_profile = UserProfile(
+                    activation_status = activation_status,
+                    customerprofile = user
+                )
+        
         insurance_plan = InsurancePlan(
                     insurance_plan_name = insurance_plan_name             
                 )
@@ -42,6 +49,7 @@ class InsuranceDBDao():
 
         with db.session.begin():
             db.session.add(user)
+            db.session.add(user_profile)
             db.session.add(insurance_plan)
             db.session.add(insurance)
 
@@ -144,8 +152,8 @@ class BlacklistDao:
                     reason = reason
                 )
         
-        db.session.add(blacklist)
-        db.session.commit()
+        with db.session.begin():
+            db.session.add(blacklist)
 
         return blacklist
     
@@ -162,4 +170,5 @@ class BlacklistDao:
         Returns:
             bool: Whether or not given user id is blacklisted
         """
-        return db.session.query(Blacklist.id).filter_by(email_address=email_address).first() is not None
+        with db.session.begin():
+            return db.session.query(Blacklist.id).filter_by(email_address=email_address).first() is not None
