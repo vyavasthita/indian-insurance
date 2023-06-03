@@ -45,7 +45,6 @@ def register():
     Returns:
         response: Status code and message in Json format
     """
-    print("Register method is called...")
     input_data = None
 
     content_type = request.headers.get('Content-Type')
@@ -81,7 +80,7 @@ def register():
     html_template = render_template('verification.html', confirm_url=confirm_url)
 
     subject = "Please verify your email"
-    send_email(email_address, subject, html_template)
+    # send_email(email_address, subject, html_template)
 
     flash('Please check your email. A verification email has been sent to you.', 'success')
 
