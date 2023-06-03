@@ -1,8 +1,9 @@
+from typing import Any
 from apps import db
 from apps.user.models import User, UserProfile, InsurancePlan, Insurance, Blacklist
 
 
-class InsuranceDBDao():
+class UserInsuranceDao():
     @staticmethod
     def add_user_insurance(
             customer_name: str,
@@ -10,7 +11,8 @@ class InsuranceDBDao():
             password: str,
             insurance_plan_name: str,
             insured_amount: int,
-            activation_status: str = 'pending'
+            activation_status: str = 'pending',
+            activated: bool = False
     ) -> Insurance:
         """
         Create new record in DB when user signs up.
@@ -21,7 +23,8 @@ class InsuranceDBDao():
             password (str): Random generated password
             insurance_plan_name (str): Insurance plan name chosen by customer
             insured_amount (int): Insured amount chosen by customer
-            activation_status (str): Activation status of customer. Default is 'pending'.
+            activation_status (str): Activation status of customer.
+            activated (bool, optional): If user has clicked on confirmation email then he is activated. Defaults to False.
 
         Returns:
             Insurance: Newly created insurance object
@@ -31,12 +34,13 @@ class InsuranceDBDao():
                     email_address = email_address,
                     password = password
                 )
-
+        
         user_profile = UserProfile(
                     activation_status = activation_status,
+                    activated = activated,
                     customerprofile = user
                 )
-        
+
         insurance_plan = InsurancePlan(
                     insurance_plan_name = insurance_plan_name             
                 )
@@ -55,7 +59,6 @@ class InsuranceDBDao():
 
         return insurance
     
-
 class UserDao:
     @staticmethod
     def add_user(
@@ -72,16 +75,99 @@ class UserDao:
             password (str): Random generated password
 
         Returns:
-            User: newly created user object
+            User: Newly created user object
         """
         user = User(
                     customer_name = customer_name,
                     email_address = email_address,
                     password = password
                 )
-
+        with db.session.begin():
+            db.session.add(user)
+        
         return user
+
+    @staticmethod
+    def get_user_by_email(
+            email_address: str,
+            ) -> Any:
+        """
+        Get user from database by passing email id.
+
+        Args:
+            email_address (str): Email address of the customer
+
+        Returns:
+            Any: User, if found in database or None
+        """
+        with db.session.begin():
+            return db.session.query(User.id).filter_by(email_address=email_address).first()
     
+class UserProfileDao:
+    @staticmethod
+    def add_profile(
+            activation_status: str,
+            customerprofile: User,
+            activated: bool = False            
+            ) -> UserProfile:
+        """
+        Add new profile in database.
+
+        Args:
+            activation_status (str): Activation status of customer.
+            customerprofile (User): The customer whose profile is added.
+            activated (bool, optional): If user has clicked on confirmation email then he is activated. Defaults to False.
+
+        Returns:
+            UserProfile: Newly created UserProfile object
+        """
+        user_profile = UserProfile(
+                    activation_status = activation_status,
+                    customerprofile = customerprofile,
+                    activated = activated
+                )
+
+        with db.session.begin():
+            db.session.add(user_profile)
+        
+        return user_profile
+    
+    @staticmethod
+    def get_profile_by_user(
+            user: str
+            ) -> UserProfile:
+        """
+        Search given profile in database by using FK user id.
+
+        Args:
+            user (str): User (Foreign Key) whose profile needs to be searched.
+
+        Returns:
+            UserProfile: Customer profile from database
+        """
+        with db.session.begin():
+            return db.session.query(UserProfile).join(
+                User, User.id == UserProfile.customerprofile_id
+            ).first()
+
+    @staticmethod
+    def update_profile_by_activation(
+            user_profile: UserProfile,
+            activated: bool
+            ) -> None:
+        """
+        Update activation status of given user profile.
+
+        Args:
+            user_profile (int): User profile which needs to be updated.
+            activated (bool): Activation status, whether or not activated.
+
+        Returns:
+            None: NA
+        """
+        user_profile.activated = activated
+        db.session.add(user_profile)
+        db.session.commit()
 
 class InsurancePlanDao:
     @staticmethod
@@ -101,9 +187,11 @@ class InsurancePlanDao:
                     insurance_plan_name = insurance_plan_name             
                 )
 
+        with db.session.begin():
+            db.session.add(insurance_plan)
+
         return insurance_plan
     
-
 class InsuranceDao:
     @staticmethod
     def add_insurance(
@@ -128,8 +216,10 @@ class InsuranceDao:
                     insurance_plan = insurance_plan             
                 )
 
-        return insurance
+        with db.session.begin():
+            db.session.add(insurance)
 
+        return insurance
 
 class BlacklistDao:
     @staticmethod

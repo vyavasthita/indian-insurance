@@ -9,7 +9,7 @@ class User(db.Model):
     email_address = db.Column(db.String(60), index=True, unique=True, nullable=False)
     password = db.Column(db.String(100), unique=True, nullable=False)
     insurances = db.relationship('Insurance', backref='user', lazy='dynamic')
-    userprofiles = db.relationship('UserProfile', backref='customerprofile', lazy='dynamic')
+    userprofiles = db.relationship('UserProfile', backref='customerprofile', uselist=False)
 
     def __init__(self, customer_name, email_address, password):
         self.customer_name = customer_name
@@ -26,11 +26,13 @@ class UserProfile(db.Model):
     __tablename__ = 'userprofile'
 
     id = db.Column(db.Integer, primary_key = True)
-    activation_status = db.Column(db.String(10), nullable=False)
-    user_profile_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    activation_status = db.Column(db.String(10), default='pending')
+    activated = db.Column(db.Boolean, nullable=False, default=False)
+    customerprofile_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    def __init__(self, activation_status, customerprofile):
+    def __init__(self, customerprofile, activation_status = 'pending', activated = False):
         self.activation_status = activation_status
+        self.activated = activated
         self.customerprofile = customerprofile
 
     def __str__(self):

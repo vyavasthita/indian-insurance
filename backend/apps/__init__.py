@@ -1,12 +1,13 @@
 from flask import Flask
-from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_mail import Mail
+from config import Config
 
 
 db = SQLAlchemy()
 migrate = Migrate()
-
+mail = Mail()
 
 ### Helper Functions ###
 def register_blueprints(app):
@@ -15,6 +16,7 @@ def register_blueprints(app):
     app.register_blueprint(user_blueprint)
 
 def initialize_extensions(app, db):
+    mail.init_app(app=app)
     db.init_app(app=app)
     migrate.init_app(app=app, db=db)
 

@@ -1,8 +1,8 @@
-"""recreating all migrations
+"""recreating migrations due to sqlite error
 
-Revision ID: 6e40b7ed8297
+Revision ID: 61cd9afb9169
 Revises: 
-Create Date: 2023-06-03 00:43:49.290433
+Create Date: 2023-06-03 10:52:06.719327
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '6e40b7ed8297'
+revision = '61cd9afb9169'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -55,9 +55,10 @@ def upgrade():
     )
     op.create_table('userprofile',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('activation_status', sa.String(length=10), nullable=False),
-    sa.Column('user_profile_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['user_profile_id'], ['user.id'], ),
+    sa.Column('activation_status', sa.String(length=10), nullable=True),
+    sa.Column('activated', sa.Boolean(), nullable=False),
+    sa.Column('customerprofile_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['customerprofile_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
