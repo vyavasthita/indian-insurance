@@ -10,18 +10,22 @@ migrate = Migrate()
 mail = Mail()
 
 ### Helper Functions ###
-def register_blueprints(app):
-    from apps.user.routes import user_blueprint
-
-    app.register_blueprint(user_blueprint)
+def initialize_config(app):
+   app.config.from_object(Config)
 
 def initialize_extensions(app, db):
     mail.init_app(app=app)
     db.init_app(app=app)
     migrate.init_app(app=app, db=db)
 
-def initialize_config(app):
-   app.config.from_object(Config)
+def initialize():
+    from apps.user import errors
+
+def register_blueprints(app):
+    from apps.user.routes import user_blueprint
+
+    app.register_blueprint(user_blueprint)
+
 
 def create_app():
     app = Flask(__name__)
@@ -29,6 +33,8 @@ def create_app():
     initialize_config(app=app)
 
     initialize_extensions(app=app, db = db)
+
+    initialize()
 
     register_blueprints(app=app)
 

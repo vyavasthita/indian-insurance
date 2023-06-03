@@ -1,8 +1,8 @@
 import json
 from flask.blueprints import Blueprint
-from flask import render_template, request, jsonify, flash, redirect, url_for
+from flask import render_template, request, jsonify, redirect, url_for
 from apps.user.dao import UserInsuranceDao, BlacklistDao, UserProfileDao, UserDao
-from apps import configuration
+from apps import configuration, db
 from apps.user.schema_validation import validate_schema
 from apps.user.data_validation import validate_data
 from utils.password_helper import PasswordGenerator
@@ -20,7 +20,15 @@ def check_blacklisting(func):
     def wrapper(*args, **kwargs):
         input_data = json.loads(request.data.decode('utf-8'))
 
-        if BlacklistDao.get_blacklist_by_email(email_address = input_data['email_address']):
+        is_success, message, result = BlacklistDao.get_blacklist_by_email(
+                                                    email_address = input_data['email_address']
+                                                )
+        if not is_success:
+            return {
+                        "status": "INTERNAL-SERVER-ERROR",
+                        "reason": message
+                    }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+        elif result is not None:
             return {
                         "status": "VALIDATION-ERROR",
                         "reason": "Email Validation Failed. You are not allowed to create an account with us."
@@ -52,25 +60,18 @@ def register():
     Returns:
         response: Status code and message in Json format
     """
-    input_data = None
-
-    content_type = request.headers.get('Content-Type')
-
-    if content_type == 'application/json':
-        input_data = json.loads(request.data.decode('utf-8'))
-    else:
-        return {"Error": 'Content type is not supported.'}
+    input_data = json.loads(request.data.decode('utf-8'))
     
     customer_name = input_data['customer_name']
     email_address = input_data['email_address']
     insurance_plan_name = input_data['insurance_plan_name']
     insured_amount = input_data['insured_amount']
 
+    # Customer has passed all validations, now proceed with customer
     password_generator = PasswordGenerator(configuration.PASSWORD_LENGTH)
-    
     password = password_generator.generate_password()
 
-    insurance_info = UserInsuranceDao.add_user_insurance(
+    is_success, message, user_insurance = UserInsuranceDao.add_user_insurance(
         customer_name = customer_name,
         email_address = email_address,
         password = password,
@@ -78,20 +79,109 @@ def register():
         insured_amount = insured_amount
     )
 
+    if not is_success:
+        return {
+                    "status": "INTERNAL-SERVER-ERROR",
+                    "reason": message
+                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+    
     # User is created, now generate email token for the user
     token_helper = TokenHelper()
-    token = token_helper.generate_confirmation_token(email=email_address)
+    is_success, message, token = token_helper.generate_confirmation_token(email=email_address)
 
+    if not is_success:
+        return {
+                    "status": "INTERNAL-SERVER-ERROR",
+                    "reason": message
+                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+    
     confirm_url = url_for('user.confirm_user', token=token, _external=True)
 
     html_template = render_template('verification.html', confirm_url=confirm_url)
 
     subject = "Please verify your email"
-    # send_email(email_address, subject, html_template)
+    is_success, message, result = send_email(email_address, subject, html_template)
 
-    flash('Please check your email. A verification email has been sent to you.', 'success')
+    if not is_success:
+        return {
+                    "status": "INTERNAL-SERVER-ERROR",
+                    "reason": message
+                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+    
+    return {
+                "status": "Success",
+                "reason": "Thanks for the registration. You will soon receive a verification email on your email '{}'. Please verify the email to activate your account.".format(email_address)
+            }, HttpStatus.HTTP_201_CREATED
 
-    return jsonify({'msg': 'some value'})
+@user_blueprint.route('/confirm/<token>')
+def confirm_user(token):
+    token_helper = TokenHelper()
+
+    is_success, message, email = token_helper.validate_token(token)
+
+    if not is_success:
+        return {
+                    "status": "VERIFICATION-EXPIRED",
+                    "reason": message
+                }, HttpStatus.HTTP_404_NOT_FOUND
+
+    """
+    Token is valid and not expired. And we have retreived the decoded email
+    """
+    # Find the user using his email id from User DB table
+    print(f"Searching user with email id {email} in User DB table.")
+    is_success, message, user = UserDao.get_user_by_email(email_address=email)
+
+    if not is_success:
+        return {
+                    "status": "INTERNAL-SERVER-ERROR",
+                    "reason": message
+                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+    elif user is None:
+        print(r"User with Email {email} is not found.")
+        return {
+                    "status": "INVALID-USER",
+                    "reason": "User with Email '{}' is not found.".format(email)
+                }, HttpStatus.HTTP_404_NOT_FOUND
+    
+    # User is found in User DB table
+    # Now search User in UserProfile DB table by passing FK user
+    is_success, message, user_profile = UserProfileDao.get_profile_by_user(user=user)
+
+    if not is_success:
+        return {
+                    "status": "INTERNAL-SERVER-ERROR",
+                    "reason": message
+                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+    elif user_profile is None:
+        print(r"User with Email {email} is not found.")
+        return {
+                    "status": "INVALID-USER",
+                    "reason": "User with Email '{}' is not found.".format(email)
+                }, HttpStatus.HTTP_404_NOT_FOUND
+    
+    print("User", user.id)
+    print("Customer Profile id", user_profile.id)
+    print("Customer Profile", user_profile.customerprofile)
+    print("Customer Is activated", user_profile.activated, type(user_profile.activated))
+    print("********************************************")
+    
+    if user_profile.activated:
+        print(f"User with email id {email} is already activated.")
+        return {
+                    "status": "ALREADY-ACTIVATED",
+                    "reason": "User with Email '{}' is already activated.".format(email)
+                }, HttpStatus.HTTP_200_OK
+    
+    else:
+        is_success, message, result = UserProfileDao.update_profile_by_activation(
+            user_profile=user_profile, 
+            activated=True
+        )
+        print('Email is successfully verified. Thanks!')
+
+
+    return redirect(url_for('user.post_verification'))
 
 @user_blueprint.route("/post_registration", methods = ['GET'])
 def post_registration():
@@ -115,41 +205,3 @@ def post_verification():
     """
     return render_template('post_verification.html')
 
-@user_blueprint.route('/confirm/<token>')
-def confirm_user(token):
-    token_helper = TokenHelper()
-    email = None
-
-    try:
-        email = token_helper.validate_token(token)
-    except:
-        print(f"Email confirmation link is invalid or has expired.")
-        flash('Email confirmation link is invalid or has expired.', 'danger')
-        return {'Error': 'Email confirmation link is invalid or has expired'}, 404
-        # To Do: Send response here
-    """
-    Token is valid and not expired. And we have retreived the decoded email
-    """
-    # Find the user using his email id from User DB table
-    user = UserDao.get_user_by_email(email_address=email)
-
-    if user:
-        print(f"User found is {user}")
-        # Now search User in UserProfile DB table by passing FK user
-        user_profile = UserProfileDao.get_profile_by_user(user=user)
-
-        if user_profile.activated:
-            print(f"User with email id {email} is already activated.")
-            flash('Given email ID is already verified.', 'success')
-        else:
-            UserProfileDao.update_profile_by_activation(
-                user_profile=user_profile, 
-                activated=True
-            )
-            
-            flash('Email is successfully verified. Thanks!', 'success')
-    else:
-        print(f"Account with {email} not found")
-        flash(f"Account with {email} not found", "danger")
-
-    return redirect(url_for('user.post_verification'))

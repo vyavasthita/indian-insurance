@@ -21,6 +21,7 @@ Docstrings added.
 While inserting data to multiple tables during sign up, sqlalchemy transaction is used. So either all records are inserted or none.
 Email verification expiration time is configurable.
 Comments were added wherever possible.
+If any exception occurred while connecting to DB then 500 status code with message will be returned to client.
 
 # Pending
 Some of the endpoints should be accessed once user is signed up, this is not yet done

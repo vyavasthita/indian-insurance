@@ -13,9 +13,7 @@ class PasswordGenerator:
     def generate_password(self) -> str:
         all = self._lower + self._upper + self._num + self._symbols
 
-        temp = random.sample(all, self._length)
-
-        return "".join(temp)
+        return "".join(random.sample(all, self._length))
 
 
 

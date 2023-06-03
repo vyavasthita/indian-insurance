@@ -1,4 +1,5 @@
 from typing import Any
+from sqlalchemy.exc import SQLAlchemyError
 from apps import db
 from apps.user.models import User, UserProfile, InsurancePlan, Insurance, Blacklist
 
@@ -12,7 +13,7 @@ class UserInsuranceDao():
             insurance_plan_name: str,
             insured_amount: int,
             activated: bool = False
-    ) -> Insurance:
+    ) -> tuple:
         """
         Create new record in DB when user signs up.
 
@@ -24,7 +25,10 @@ class UserInsuranceDao():
             insured_amount (int): Insured amount chosen by customer
 
         Returns:
-            Insurance: Newly created insurance object
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """    
         user = User(
                     customer_name = customer_name,
@@ -47,12 +51,16 @@ class UserInsuranceDao():
                 )
 
         with db.session.begin():
-            db.session.add(user)
-            db.session.add(user_profile)
-            db.session.add(insurance_plan)
-            db.session.add(insurance)
-
-        return insurance
+            try:
+                db.session.add(user)
+                db.session.add(user_profile)
+                db.session.add(insurance_plan)
+                db.session.add(insurance)
+            except SQLAlchemyError as err:
+                print("Failed to add insurance data into database. {}.".format(str(err)))
+                return False, "Failed to update database.", None
+   
+        return True, None, insurance
     
 class UserDao:
     @staticmethod
@@ -60,7 +68,7 @@ class UserDao:
             customer_name: str,
             email_address: str,
             password: str
-            ) -> User:
+            ) -> tuple:
         """
         Create new user in database.
 
@@ -70,7 +78,10 @@ class UserDao:
             password (str): Random generated password
 
         Returns:
-            User: Newly created user object
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """
         user = User(
                     customer_name = customer_name,
@@ -78,14 +89,18 @@ class UserDao:
                     password = password
                 )
         with db.session.begin():
-            db.session.add(user)
-        
-        return user
+            try:
+                db.session.add(user)
+            except SQLAlchemyError as err:
+                print("Failed to add user data into database. {}.".format(str(err)))
+                return False, "Failed to update database.", None
+                  
+        return True, None, user
 
     @staticmethod
     def get_user_by_email(
             email_address: str,
-            ) -> Any:
+            ) -> tuple:
         """
         Get user from database by passing email id.
 
@@ -93,18 +108,35 @@ class UserDao:
             email_address (str): Email address of the customer
 
         Returns:
-            Any: User, if found in database or None
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """
+        result = None
+
         with db.session.begin():
-            return db.session.query(User.id).filter_by(email_address=email_address).first()
-    
+            try:
+                result = db.session.query(User.id).filter_by(email_address=email_address)
+
+                if result is not None:
+                    result = result.first()
+                
+            except SQLAlchemyError as err:
+                print("Failed to search user by email in database. {}.".format(str(err)))
+                return False, "Failed to update database.", None
+            
+
+
+        return True, None, result
+            
 class UserProfileDao:
     @staticmethod
     def add_profile(
             activation_status: str,
             customerprofile: User,
             activated: bool = False            
-            ) -> UserProfile:
+            ) -> tuple:
         """
         Add new profile in database.
 
@@ -114,7 +146,10 @@ class UserProfileDao:
             activated (bool, optional): If user has clicked on confirmation email then he is activated. Defaults to False.
 
         Returns:
-            UserProfile: Newly created UserProfile object
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """
         user_profile = UserProfile(
                     activation_status = activation_status,
@@ -123,14 +158,18 @@ class UserProfileDao:
                 )
 
         with db.session.begin():
-            db.session.add(user_profile)
-        
-        return user_profile
+            try:
+                db.session.add(user_profile)
+            except SQLAlchemyError as err:
+                print("Failed to add user profile data into database. {}.".format(str(err)))
+                return False, "Failed to update database.", None
+                   
+        return True, None, user_profile
     
     @staticmethod
     def get_profile_by_user(
             user: str
-            ) -> UserProfile:
+            ) -> tuple:
         """
         Search given profile in database by using FK user id.
 
@@ -138,18 +177,33 @@ class UserProfileDao:
             user (str): User (Foreign Key) whose profile needs to be searched.
 
         Returns:
-            UserProfile: Customer profile from database
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """
-        with db.session.begin():
-            return db.session.query(UserProfile).join(
-                User, User.id == UserProfile.customerprofile_id
-            ).first()
+        result = None
 
+        with db.session.begin():
+            try:
+                result = db.session.query(UserProfile).join(
+                    User, User.id == UserProfile.customerprofile_id
+                )
+
+                if result is not None:
+                    result = result.first()
+
+            except SQLAlchemyError as err:
+                print("Failed to get profile by user from database. {}.".format(str(err)))
+                return False, "Failed to update database.", None
+
+        return True, None, result
+    
     @staticmethod
     def update_profile_by_activation(
             user_profile: UserProfile,
             activated: bool
-            ) -> None:
+            ) -> tuple:
         """
         Update activation status of given user profile.
 
@@ -158,17 +212,26 @@ class UserProfileDao:
             activated (bool): Activation status, whether or not activated.
 
         Returns:
-            None: NA
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """
-        user_profile.activated = activated
-        db.session.add(user_profile)
-        db.session.commit()
+        try:
+            user_profile.activated = activated
+            db.session.add(user_profile)
+            db.session.commit()
+        except SQLAlchemyError as err:
+            print("Failed to update profile by activation in database. {}.".format(str(err)))
+            return False, "Failed to update database.", None
+        
+        return True, None, None
 
 class InsurancePlanDao:
     @staticmethod
     def add_insurance_plan(
             insurance_plan_name: str
-            ) -> InsurancePlan:
+            ) -> tuple:
         """
         Create new insurance plan in database.
 
@@ -176,16 +239,23 @@ class InsurancePlanDao:
             insurance_plan_name (str): Insurance plan name chosen by customer
 
         Returns:
-            InsurancePlan: newly created insurance plan object
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """
         insurance_plan = InsurancePlan(
                     insurance_plan_name = insurance_plan_name             
                 )
 
         with db.session.begin():
-            db.session.add(insurance_plan)
-
-        return insurance_plan
+            try:
+                db.session.add(insurance_plan)
+            except SQLAlchemyError as err:
+                print("Failed to add insurance plan in database. {}.".format(str(err)))
+                return False, "Failed to update database.", None
+            
+        return True, None, insurance_plan
     
 class InsuranceDao:
     @staticmethod
@@ -193,7 +263,7 @@ class InsuranceDao:
             insured_amount: int,
             user: User,
             insurance_plan: InsurancePlan
-            ) -> Insurance:
+            ) -> tuple:
         """
         Create new insurance in database.
 
@@ -203,7 +273,10 @@ class InsuranceDao:
             insurance_plan (InsurancePlan): The insurance plan chosen by customer
 
         Returns:
-            Insurance: Newly created insurance object
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """
         insurance = Insurance(
                     insured_amount = insured_amount,
@@ -212,16 +285,20 @@ class InsuranceDao:
                 )
 
         with db.session.begin():
-            db.session.add(insurance)
+            try:
+                db.session.add(insurance)
+            except SQLAlchemyError as err:
+                print("Failed to add insurance in database. {}.".format(str(err)))
+                return False, "Failed to update database.", None
 
-        return insurance
+        return True, None, insurance
 
 class BlacklistDao:
     @staticmethod
     def add_blacklist(
             email_address: str,
             reason: str
-            ) -> Blacklist:
+            ) -> tuple:
         """
         Create new blacklisted email in database.
 
@@ -230,7 +307,10 @@ class BlacklistDao:
             reason (str): Reason for blacklisting
 
         Returns:
-            Blacklist: newly created blacklist object
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """
         blacklist = Blacklist(
                     email_address = email_address,
@@ -238,9 +318,13 @@ class BlacklistDao:
                 )
         
         with db.session.begin():
-            db.session.add(blacklist)
-
-        return blacklist
+            try:
+                db.session.add(blacklist)
+            except SQLAlchemyError as err:
+                print("Failed to add blacklist in database. {}.".format(str(err)))
+                return False, "Failed to update database.", None
+            
+        return True, None, blacklist
     
     @staticmethod
     def get_blacklist_by_email(
@@ -253,7 +337,18 @@ class BlacklistDao:
             email_address (str): Email address of the customer
 
         Returns:
-            bool: Whether or not given user id is blacklisted
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
         """
+        result = None
+
         with db.session.begin():
-            return db.session.query(Blacklist.id).filter_by(email_address=email_address).first() is not None
+            try:
+                result = db.session.query(Blacklist.id).filter_by(email_address=email_address).first()
+            except SQLAlchemyError as err:
+                print("Failed to get blacklist by email from database. {}.".format(str(err)))
+                return False, "Failed to update database.", None
+        
+        return True, None, result
