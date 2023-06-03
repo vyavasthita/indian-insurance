@@ -11,7 +11,6 @@ class UserInsuranceDao():
             password: str,
             insurance_plan_name: str,
             insured_amount: int,
-            activation_status: str = 'pending',
             activated: bool = False
     ) -> Insurance:
         """
@@ -23,8 +22,6 @@ class UserInsuranceDao():
             password (str): Random generated password
             insurance_plan_name (str): Insurance plan name chosen by customer
             insured_amount (int): Insured amount chosen by customer
-            activation_status (str): Activation status of customer.
-            activated (bool, optional): If user has clicked on confirmation email then he is activated. Defaults to False.
 
         Returns:
             Insurance: Newly created insurance object
@@ -36,8 +33,6 @@ class UserInsuranceDao():
                 )
         
         user_profile = UserProfile(
-                    activation_status = activation_status,
-                    activated = activated,
                     customerprofile = user
                 )
 

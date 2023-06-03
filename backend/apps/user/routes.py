@@ -69,7 +69,7 @@ def register():
         email_address = email_address,
         password = password,
         insurance_plan_name = insurance_plan_name,
-        insured_amount = insured_amount            
+        insured_amount = insured_amount
     )
 
     # User is created, now generate email token for the user
@@ -81,7 +81,6 @@ def register():
     html_template = render_template('verification.html', confirm_url=confirm_url)
 
     subject = "Please verify your email"
-    print(f"token {token}")
     send_email(email_address, subject, html_template)
 
     flash('Please check your email. A verification email has been sent to you.', 'success')
