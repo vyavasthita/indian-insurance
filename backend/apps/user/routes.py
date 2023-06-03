@@ -3,6 +3,8 @@ from flask.blueprints import Blueprint
 from flask import render_template, request, jsonify, flash, redirect, url_for
 from apps.user.dao import UserInsuranceDao, BlacklistDao, UserProfileDao, UserDao
 from apps import configuration
+from apps.libs.schema_validation import validate_schema
+from apps.libs.data_validation import validate_data
 from utils.password_helper import PasswordGenerator
 from utils.token import TokenHelper
 from utils.email import send_email
@@ -12,7 +14,6 @@ user_blueprint = Blueprint(name='user', import_name=__name__,
                            template_folder='templates/user',
                            url_prefix='/user'
                 )
-
 
 def check_blacklisting(func):
     def wrapper(*args, **kwargs):
@@ -36,6 +37,8 @@ def home():
     return render_template('home.html')
 
 @user_blueprint.route("/register", methods = ['POST'])
+@validate_data
+@validate_schema
 @check_blacklisting
 def register():
     """
