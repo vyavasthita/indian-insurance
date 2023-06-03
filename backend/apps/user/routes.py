@@ -3,11 +3,12 @@ from flask.blueprints import Blueprint
 from flask import render_template, request, jsonify, flash, redirect, url_for
 from apps.user.dao import UserInsuranceDao, BlacklistDao, UserProfileDao, UserDao
 from apps import configuration
-from apps.libs.schema_validation import validate_schema
-from apps.libs.data_validation import validate_data
+from apps.user.schema_validation import validate_schema
+from apps.user.data_validation import validate_data
 from utils.password_helper import PasswordGenerator
 from utils.token import TokenHelper
 from utils.email import send_email
+from utils.http_status import HttpStatus
 
 
 user_blueprint = Blueprint(name='user', import_name=__name__, 
@@ -20,7 +21,10 @@ def check_blacklisting(func):
         input_data = json.loads(request.data.decode('utf-8'))
 
         if BlacklistDao.get_blacklist_by_email(email_address = input_data['email_address']):
-            return {'VALIDATION-ERROR': 'Email Validation Failed. You are not allowed to create an account with us.'}, 422
+            return {
+                        "status": "VALIDATION-ERROR",
+                        "reason": "Email Validation Failed. You are not allowed to create an account with us."
+                    }, HttpStatus.HTTP_422_UNPROCESSABLE_ENTITY
         
         return func(*args, **kwargs)
     return wrapper

@@ -31,3 +31,18 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 # Webserver
 gunicorn
 Gunicorn configuration is found under apps/config/gunicorn_conf.py
+
+# Validations Done
+1. Not a Json Format
+2. Invalid Json Format
+3. Extra attribute is passed in request.
+4. Required attribute is not passed in request.
+5. Customer Name attribute has more than 2 spaces.
+6. Insurance plan name is more than 200 characters.
+7. Insured Amount is more than 50000
+8. Data type validation for json body
+9. Blacklisted email
+
+# Assumptions
+For blacklisted emails, we are sending https status code 422 with message
+saying "Email Validation Failed. You are not allowed to create an account with us."
