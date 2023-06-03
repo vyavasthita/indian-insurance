@@ -1,9 +1,8 @@
 from apps import create_app
 
-# app = create_app
 
 if __name__ == '__main__':
-    app = create_app()
-    app.run()
+    application = create_app()
+    application.run()
 else:
-    app = create_app()
+    application = create_app()
