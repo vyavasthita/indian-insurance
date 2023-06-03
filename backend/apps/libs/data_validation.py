@@ -1,12 +1,14 @@
 import json
 from flask import request
+from utils.http_status import HttpStatus
 
 
 def validate_customer_name(customer_name):
     max_spaces_allowed = 2
+    space_count = customer_name.count(" ")
 
-    if customer_name.count(" ") > max_spaces_allowed:
-        return False, "Max '{}' spaces are allowed.".format(max_spaces_allowed)
+    if space_count > max_spaces_allowed:
+        return False, "'{}' Spaces found. Max '{}' spaces are allowed.".format(space_count, max_spaces_allowed)
     
     return True, None
 
@@ -35,7 +37,7 @@ def validate_data(func):
             return {
                         "status": "VALIDATION-ERROR",
                         "reason": "Invalid Data in 'customer_name' attribute. {}".format(message)
-                    }, 400
+                    }, HttpStatus.HTTP_400_BAD_REQUEST
         
         valid, message = validate_insurance_plan_name(input_data['insurance_plan_name'])
 
@@ -43,7 +45,7 @@ def validate_data(func):
             return {
                         "status": "VALIDATION-ERROR",
                         "reason": "Invalid Data. {}".format(message)
-                    }, 400
+                    }, HttpStatus.HTTP_400_BAD_REQUEST
         
         valid, message = validate_insured_amount(input_data['insured_amount'])
 
@@ -51,7 +53,7 @@ def validate_data(func):
             return {
                         "status": "VALIDATION-ERROR",
                         "reason": "Invalid Data. {}".format(message)
-                    }, 400
+                    }, HttpStatus.HTTP_400_BAD_REQUEST
 
         return func(*args, **kwargs)
     return wrapper

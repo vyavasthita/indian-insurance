@@ -37,8 +37,8 @@ def home():
     return render_template('home.html')
 
 @user_blueprint.route("/register", methods = ['POST'])
-@validate_data
 @validate_schema
+@validate_data
 @check_blacklisting
 def register():
     """
