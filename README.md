@@ -31,3 +31,10 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 # Webserver
 gunicorn
 Gunicorn configuration is found under apps/config/gunicorn_conf.py
+
+# Assumption Made
+'Content-Type' header value must be 'application/json' otherwise exception will be raised.
+# Validations Done
+1. Invalid POST request
+    Request -> Invalid Json
+    Response -> 400 Status Code with error message
