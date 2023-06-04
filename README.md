@@ -5,6 +5,12 @@ This has been implemented using Flask.
 # Python Version
 3.10.6
 
+# Testing Platform
+
+1. OS - Ubuntu 22.04
+2. Docker Compose version v2.17.3
+3. Docker version 23.0.6
+
 # Webserver
 gunicorn
 Gunicorn configuration is found under apps/config/gunicorn_conf.py
@@ -53,6 +59,7 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
     reason, string(100), null
 
 # Highligts
+- App is deployed live on https://indian-insurance.onrender.com/user/register
 - Gunicorn production web server is used.
 - Python Logging is done for Console and File.
 - Unit tests implemented. Coverage is 42%.
@@ -112,7 +119,7 @@ HTTP_422_UNPROCESSABLE_ENTITY = 422
 HTTP_500_INTERNAL_SERVER_ERROR = 500
 
 # Improvements Required, To Do
-Some improvements are required, these are intentionlly not done due to time constraints.
+Some improvements are required, these are intentionly not done due to time constraints.
 
 1. Sending email takes little time, this requires debugging.
     Or we need to use some background task using Celery/RQ.
@@ -123,19 +130,175 @@ Some improvements are required, these are intentionlly not done due to time cons
 
 4. Serialization - I did not use any serialization library like marshmallow. I just used simple python dict with flask jsonify().
 
-5. - CORS for all domain is enable. Later we need to make it configurable for particular domains.
+5. CORS for all domain is enable. Later we need to make it configurable for particular domains.
 
 6. Different configurations for differnent environments like Dev, test, QA, Production.
 
-7. Separate requirements.txt file for different environments or use of poetry.
+7. Separate requirements.txt file for different environments or use poetry.
 
 8. Some of the responses sent to client are more of a developer use. While client should only see generic message.
 
-9. Unit test coverage
+9. More automated unit tests need to be written specially for db crud operations and also by using mocking.
+
+10. Unit test coverage should improve.
+
+11. Use custome error handlers for invalid endpoints (404, 500 status codes)
 
 # Pending
 Some of the endpoints should be accessed once user is signed up, this is not yet done
 
 # Note
 Initially I have created flask form for sign up for testing purpose.
-Relevant code and html still part of code. This could be deleted later.
+Relevant code and html are still part of code. This could be deleted later.
+
+## How to Test
+
+1. Clone the repo
+2. Checkout branch 'development'
+3. Go to root directory 'indian-insurance'.
+
+I have used 'www.gmail.com' with some tweaks to emails.
+
+# Option 1 (Live environment without any configuration)
+This application is deployed to 'https://render.com/'.
+
+1. Use Postman or any other client for API testing
+    - For customer registration use the following Payload for Post request.
+
+    Type: POST
+
+    URL: https://indian-insurance.onrender.com/user/register
+
+    Json Payload:
+
+    {
+        "customer_name": "Cusomer 1",
+        "email_address": "User 1@gmail.com",
+        "insurance_plan_name": "Family",
+        "insured_amount": 300000
+    }
+
+2. My Email Credentials are deployed to above environment.
+   Hence you will receive email while using the above live environment.
+
+# Option 2 (Without Docker and With Sqlite DB)
+
+Use a Ubuntu OS
+
+1. Create Virtual Environment
+    - python3 -m venv venv
+
+2. Activate Virtual Environment
+    - source venv/bin/activate
+
+3. Go to directory 
+    - cd backend
+
+4. To use sqlite, export following environment variable
+    - export FLASK_ENV=development
+
+5. Create .env file
+    - in the same backend directory, create a env file
+    - touch .env
+    - Copy the contents in .env file shared via email
+
+6. Install Packages
+    - pip install -r requirements.txt
+
+7. Run The Flask App
+    ./entrypoint.sh
+
+8. Use Postman or any other client for API testing
+    - For customer registration use the following Payload for Post request.
+
+    Type: POST
+
+    URL: http://127.0.0.1:5000/user/register
+
+    Json Payload:
+
+    {
+        "customer_name": "Cusomer 1",
+        "email_address": "User 1@gmail.com",
+        "insurance_plan_name": "Family",
+        "insured_amount": 300000
+    }
+
+9. To Run unit tests
+    - pytest -v
+
+10. To Run unit tests coverage
+    - pytest --cov
+
+11. We need to update backend/.env file with email credentials we are going to use.
+    MAIL_USERNAME=<Your email>
+    MAIL_PASSWORD=<app password>
+
+    Here if we use normal password, gmail will not athorize it. Google has completely blocke this.
+    Now we need to use 'app password'. Refere below page for this.
+
+    https://myaccount.google.com/lesssecureapps
+
+# Option 3 (With Docker and With MySql DB)
+
+Prerequisites; -
+
+Docker and Docker compose must be installed.
+
+1. Go to directory 
+    - cd backend
+
+2. Create .env file
+    - in the same backend directory, create a env file
+    - touch .env
+    - Copy the contents in .env file shared via email
+
+3. Go back to root directory 'indian-insurance'
+    cd ..
+
+4. Run following command 
+    - make run
+
+    This will start 3 docker containers.
+    a) Flask App
+    b) MySql DB
+    c) Phpmyadmin
+
+5. Use Postman or any other client for API testing
+    - For customer registration use the following Payload for Post request.
+
+    Type: POST
+
+    URL: http://127.0.0.1:5000/user/register
+
+    Json Payload:
+    
+    {
+        "customer_name": "Cusomer 1",
+        "email_address": "User 1@gmail.com",
+        "insurance_plan_name": "Family",
+        "insured_amount": 300000
+    }
+
+6. To access MySql db, use phpmyadmin.
+    URL: http://127.0.0.1:8080
+
+    database: indianinsurance
+
+7. To Run unit tests
+    - docker exec backend pytest -v
+
+8. To Run unit tests coverage
+    - docker exec backend pytest --cov
+
+9. To stop the containers
+    - make stop
+
+10. We need to update backend/.env file with email credentials we are going to use.
+    MAIL_USERNAME=<Your email>
+    MAIL_PASSWORD=<app password>
+
+    Here if we use normal password, gmail will not athorize it. Google has completely blocke this.
+    Now we need to use 'app password'. Refere below page for this.
+
+    https://myaccount.google.com/lesssecureapps
