@@ -1,5 +1,32 @@
+"""User blueprint for API requests.
+
+SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+
+@file routes.py
+@author Dilip Kumar Sharma
+@copyright Seneca Global
+@date 2nd Jun 2023
+
+About; -
+--------
+    Blueprint for api requests.
+
+Working; -
+----------
+    All api requests for user are received by this module.
+
+Uses; -
+-------
+    API requests are handled by this module.
+
+Reference; -
+------------
+    TBD
+"""
+
 import json
 import os
+from functools import wraps
 from flask.blueprints import Blueprint
 from flask import render_template, request, jsonify, redirect, url_for
 from apps.user.dao import UserInsuranceDao, BlacklistDao, UserProfileDao, UserDao
@@ -10,6 +37,7 @@ from utils.password_helper import PasswordGenerator
 from utils.token import TokenHelper
 from utils.email import send_email
 from utils.http_status import HttpStatus
+from utils.insurance_logger import InsuranceLogger
 
 
 user_blueprint = Blueprint(name='user', import_name=__name__, 
@@ -17,7 +45,10 @@ user_blueprint = Blueprint(name='user', import_name=__name__,
                            url_prefix='/user'
                 )
 
+InsuranceLogger.log_info("This is Indian Insurance Company")
+
 def check_blacklisting(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         input_data = json.loads(request.data.decode('utf-8'))
 

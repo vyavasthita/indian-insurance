@@ -1,3 +1,29 @@
+"""Gunicorn Configuration.
+
+SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+
+@file gunicorn_conf.py
+@author Dilip Kumar Sharma
+@copyright Seneca Global
+@date 3rd Jun 2023
+
+About; -
+--------
+    Gunicorn configuration is done here.
+
+Working; -
+----------
+    This class reads the no of cors and accordingly creates workers.
+
+Uses; -
+-------
+    Gunicorn web server uses this configuration.
+
+Reference; -
+------------
+    TBD
+"""
+
 import multiprocessing
 
 

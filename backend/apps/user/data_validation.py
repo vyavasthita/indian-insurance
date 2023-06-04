@@ -1,10 +1,46 @@
+"""Data Validation for endpoints.
+
+SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+
+@file data_validation.py
+@author Dilip Kumar Sharma
+@copyright Seneca Global
+@date 3rd Jun 2023
+
+About; -
+--------
+    Data validation done for POST request.
+
+Working; -
+----------
+    This module checks all parameter passed to post request and raises response and status
+    code when payload is invalid.
+
+Uses; -
+-------
+    This module is used as decorator by POST request endpoint.
+
+Reference; -
+------------
+    TBD
+"""
+
 import json
+from functools import wraps
 from flask import request
 from utils.http_status import HttpStatus
 
 
-def validate_customer_name(customer_name):
-    max_spaces_allowed = 2
+def validate_customer_name(customer_name: str) -> tuple:
+    """Validate customer name
+
+    Args:
+        customer_name (str): Name of customer received in request
+
+    Returns:
+        tuple: bool for success/failure and message if any
+    """
+    max_spaces_allowed = 2 # To Do : Read from configuration
     space_count = customer_name.count(" ")
 
     if space_count > max_spaces_allowed:
@@ -12,22 +48,52 @@ def validate_customer_name(customer_name):
     
     return True, None
 
-def validate_insurance_plan_name(insurance_plan_name):
-    if len(insurance_plan_name) > 200:
+def validate_insurance_plan_name(insurance_plan_name: str) -> tuple:
+    """Validate insurance plan name
+
+    Args:
+        insurance_plan_name (str): Name of insurance plan received in request
+
+    Returns:
+        tuple: bool for success/failure and message if any
+    """
+    if len(insurance_plan_name) > 200:  # To Do : Read from configuration
         return False, "Max length should be '{}'.".format(200)
 
     return True, None
 
-def is_insured_amount_valid_inr(insured_amount):
+def is_insured_amount_valid_inr(insured_amount: int) -> tuple:
+    """Validate insurance amount is valid INR
+
+    Args:
+        insured_amount (int): Insurance amount received in request
+
+    Returns:
+        tuple: bool for success/failure and message if any
+    """
     return True, None # TBD
 
-def validate_insured_amount(insured_amount):
-    if insured_amount > 5000000:
+def validate_insured_amount(insured_amount: int) -> tuple:
+    """Validate insurance amount is not beyond a limit.
+
+    Args:
+        insured_amount (int): Insurance amount received in request
+
+    Returns:
+        tuple: bool for success/failure and message if any
+    """
+    if insured_amount > 5000000:    # To Do : Read from configuration
         return False, "Max value should be '{}'.".format(5000000)
     
     return is_insured_amount_valid_inr(insured_amount)
 
 def validate_data(func):
+    """Validate data in api request.
+
+    Args:
+        func (_type_): A function object
+    """
+    @wraps(func)
     def wrapper(*args, **kwargs):
         input_data = json.loads(request.data.decode('utf-8'))
         

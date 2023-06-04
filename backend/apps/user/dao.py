@@ -1,3 +1,34 @@
+"""To do crud operations with database.
+
+SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+
+@file dao.py
+@author Dilip Kumar Sharma
+@copyright Seneca Global
+@date 3rd Jun 2023
+
+About; -
+--------
+    It is responsible for doing CRUD operations with database.
+
+Design Pattern; -
+-----------------
+    This module is implemented using DAO pattern.
+
+Working; -
+----------
+    This class uses flask sqlalchemy transaction as context manager to connect to database.
+
+Uses; -
+-------
+    This dao modules works as an interface between database and all other python modules.
+    Due to this, no other python module needs to use db object to talk to database.
+
+Reference; -
+------------
+    TBD
+"""
+
 from typing import Any
 from sqlalchemy.exc import SQLAlchemyError
 from apps import db
@@ -12,8 +43,7 @@ class UserInsuranceDao():
             email_address: str,
             password: str,
             insurance_plan_name: str,
-            insured_amount: int,
-            activated: bool = False
+            insured_amount: int
     ) -> tuple:
         """
         Create new record in DB when user signs up.

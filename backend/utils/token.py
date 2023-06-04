@@ -1,4 +1,30 @@
-from typing import Any
+"""Token generation module
+
+SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+
+@file token.py
+@author Dilip Kumar Sharma
+@copyright Seneca Global
+@date 3rd Jun 2023
+
+About; -
+--------
+    Module for generating random token
+
+Working; -
+----------
+    This modules generates random token
+
+Uses; -
+-------
+    This module is used by routes generate token during user registration.
+    This module could also be used to verify given token is still valid or not.
+
+Reference; -
+------------
+    TBD
+"""
+
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous.exc import BadData
 from apps import configuration
@@ -8,7 +34,7 @@ class TokenHelper:
     def __init__(self) -> None:
         self._serializer = URLSafeTimedSerializer(configuration.SECRET_KEY)
 
-    def generate_confirmation_token(self, email) -> tuple:
+    def generate_confirmation_token(self, email: str) -> tuple:
         """
         Generate Email Token.
 
@@ -24,7 +50,7 @@ class TokenHelper:
             tuple: status, message, result
                     status is boolean value indicating success (True) or Failure(False),
                     message is a string about the error occurred if any, otherwise None,
-                    result is the actual response generated from DB Query or None otherwise.
+                    result is the actual response or None otherwise.
         """
         result = None
 
@@ -46,7 +72,7 @@ class TokenHelper:
             tuple: status, message, result
                     status is boolean value indicating success (True) or Failure(False),
                     message is a string about the error occurred if any, otherwise None,
-                    result is the actual response generated from DB Query or None otherwise.
+                    result is the actual response or None otherwise.
         """
         try:
             email = self._serializer.loads(

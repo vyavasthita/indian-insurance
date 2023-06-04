@@ -1,5 +1,30 @@
+"""Flask App Configuration.
+
+SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+
+@file config.py
+@author Dilip Kumar Sharma
+@copyright Seneca Global
+@date 3rd Jun 2023
+
+About; -
+--------
+    It is responsible for setting all configurations required for flask app.
+
+Working; -
+----------
+    This configuration class is initialized at the time of creating flask app.
+
+Uses; -
+-------
+    All other python modules can use this class for accessing configurations.
+
+Reference; -
+------------
+    TBD
+"""
+
 import os
-import ast
 
 
 # The root directory where the sqlite db file is created.
@@ -27,6 +52,15 @@ class Config:
 
     # The length of the randomely generated password
     PASSWORD_LENGTH = os.getenv('PASSWORD_LENGTH') or 10
+
+    # Configuration file for logging
+    LOG_CONFIG_FILE = os.getenv('LOG_CONFIG_FILE') or './apps/config/logging.conf'
+
+    # Directory where logs will be generated.
+    LOGS_DIR = os.getenv('LOGS_DIR') or '/tmp/insurance_logs'
+
+    # Log File name
+    LOG_FILE_NAME = os.getenv('LOG_FILE_NAME') or 'insurance.log'
 
     # mail settings
     MAIL_SERVER = 'sandbox.smtp.mailtrap.io'
