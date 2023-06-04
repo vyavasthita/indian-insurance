@@ -47,7 +47,7 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
     
     FK - User.id, InsurancePlan.id
 
-4. Blacklist
+5. Blacklist
     id, integer, PK
     email_address, string(60), indexed, unique, not null
     reason, string(100), null
@@ -99,6 +99,7 @@ multiple commits happen and if one or more fails.
 - pytest
 - pytest-cov
 - email-validator
+- python-dotenv
 
 # HTTP Status code used
 HTTP_200_OK = 200
@@ -125,6 +126,8 @@ Some improvements are required, these are intentionlly not done due to time cons
 6. Different configurations for differnent environments like Dev, test, QA, Production.
 
 7. Separate requirements.txt file for different environments or use of poetry.
+
+8. Some of the responses sent to client are more of a developer use. While client should only see generic message.
 
 # Pending
 Some of the endpoints should be accessed once user is signed up, this is not yet done

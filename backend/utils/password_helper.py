@@ -42,9 +42,15 @@ class PasswordGenerator:
         Returns:
             str: Generated password
         """
-        all = self._lower + self._upper + self._num + self._symbols
+        password = None
 
-        return "".join(random.sample(all, self._length))
+        try:
+            all = self._lower + self._upper + self._num + self._symbols
+            password = "".join(random.sample(all, self._length))
+        except Exception as err:
+            return False, "Failed to generate password. {}".format(str(err)), None
+
+        return True, None, password
 
 
 

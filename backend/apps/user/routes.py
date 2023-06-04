@@ -136,7 +136,13 @@ def register():
     InsuranceLogger.log_info(f"Generating random password.")
 
     password_generator = PasswordGenerator(configuration.PASSWORD_LENGTH)
-    password = password_generator.generate_password()
+    is_success, message, password = password_generator.generate_password()
+
+    if not is_success:
+        return {
+                    "status": "INTERNAL-SERVER-ERROR",
+                    "reason": message
+                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
     
     is_success, message, user_insurance = UserInsuranceDao.add_user_insurance(
         customer_name = customer_name,

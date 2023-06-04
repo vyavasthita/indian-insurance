@@ -25,21 +25,23 @@ Reference; -
 """
 
 import os
+import ast
+from dotenv import load_dotenv
+
 
 # The root directory where the sqlite db file is created.
 base_dir = os.path.abspath(os.path.dirname(__name__))
 
 
+load_dotenv()
+
+
 class Config:
-    FLASK_ENV = os.getenv('FLASK_ENV', default='main.py')
-    DEBUG = os.getenv('DEBUG', default=False)
-
     # To be used by Flask Form (WTF package)
-    SECRET_KEY = os.getenv('SECRET_KEY') or 'not really a secret'
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT')
 
-    SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT') or 'security password salt'
-
-    EMAIL_TOKEN_EXPIRATION = os.getenv('EMAIL_TOKEN_EXPIRATION') or 180 #  Seconds
+    EMAIL_TOKEN_EXPIRATION = ast.literal_eval(os.getenv('EMAIL_TOKEN_EXPIRATION'))
 
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
     
@@ -47,10 +49,10 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI') or 'sqlite:///' + os.path.join(base_dir, 'insurance.db')
     
     # We do not want to track the modifications done in the DB.
-    SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', default = False)  # Convert string to boolean or False
-
+    SQLALCHEMY_TRACK_MODIFICATIONS = ast.literal_eval(os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', default = False))
+    
     # The length of the randomely generated password
-    PASSWORD_LENGTH = os.getenv('PASSWORD_LENGTH') or 10
+    PASSWORD_LENGTH = ast.literal_eval(os.getenv('PASSWORD_LENGTH'))
 
     # Configuration file for logging
     LOG_CONFIG_FILE = os.getenv('LOG_CONFIG_FILE') or './apps/config/logging.conf'
@@ -62,14 +64,11 @@ class Config:
     LOG_FILE_NAME = os.getenv('LOG_FILE_NAME') or 'insurance.log'
 
     # mail settings
-    MAIL_SERVER = 'sandbox.smtp.mailtrap.io'
-    MAIL_PORT = 2525
-    MAIL_USE_TLS = True
-    MAIL_USE_SSL = False
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = ast.literal_eval(os.getenv('MAIL_PORT'))
+    MAIL_USE_TLS = ast.literal_eval(os.getenv('MAIL_USE_TLS'))
+    MAIL_USE_SSL = ast.literal_eval(os.getenv('MAIL_USE_SSL'))
 
-    # gmail authentication
+    # Email authentication
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
-
-    # mail accounts
-    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
