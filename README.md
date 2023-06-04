@@ -36,6 +36,77 @@ Note: Along with sending email, email template is also stored locally as a file.
 Verification email file -> ./backend/verification_email.txt
 Email email file -> ./backend/welcome_email.txt
 
+# Source Code Folder Structure
+
+```bash
+|-- LICENSE
+|-- Makefile
+|-- README.md
+|-- backend
+|   |-- Dockerfile
+|   |-- apps
+|   |   |-- __init__.py
+|   |   |-- config
+|   |   |   |-- config.py
+|   |   |   |-- gunicorn_conf.py
+|   |   |   `-- logging.conf
+|   |   |-- templates
+|   |   |   `-- base.html
+|   |   `-- user
+|   |       |-- dao.py
+|   |       |-- data_validation.py
+|   |       |-- errors.py
+|   |       |-- forms.py
+|   |       |-- models.py
+|   |       |-- routes.py
+|   |       |-- schema_validation.py
+|   |       `-- templates
+|   |           `-- user
+|   |               |-- blacklist.html
+|   |               |-- home.html
+|   |               |-- register.html
+|   |               |-- verification.html
+|   |               `-- welcome.html
+|   |-- entrypoint.sh
+|   |-- migrations
+|   |   |-- README
+|   |   |-- alembic.ini
+|   |   |-- env.py
+|   |   |-- script.py.mako
+|   |   `-- versions
+|   |       |-- 2326888c8dad_.py
+|   |       |-- 61cd9afb9169_recreating_migrations_due_to_sqlite_.py
+|   |       `-- 6a275c9c288c_update_userprofile_model.py
+|   |-- requirements.txt
+|   |-- tests
+|   |   |-- __init__.py
+|   |   |-- conftest.py
+|   |   |-- functional
+|   |   |   `-- __init__.py
+|   |   |-- pytest.ini
+|   |   |-- sample_test_schema
+|   |   |   |-- invalid_json.csv
+|   |   |   `-- not_supported_content_types.csv
+|   |   `-- unit
+|   |       |-- __init__.py
+|   |       `-- user
+|   |           |-- __init__.py
+|   |           `-- test_post.py
+|   |-- utils
+|   |   |-- __init__.py
+|   |   |-- email.py
+|   |   |-- http_status.py
+|   |   |-- insurance_logger.py
+|   |   |-- password_helper.py
+|   |   |-- security.py
+|   |   |-- token.py
+|   |   `-- validation.py
+|   `-- wsgi.py
+|-- database
+|   `-- init.sql
+`-- docker-compose.yaml
+```
+
 # Assumptions
 - I have supported 'content-type' with 'application/json' only.
 - Registration mail like is valid for configurable number of seconds.
@@ -159,6 +230,12 @@ Json Payload:
   "email_address": "<Email>",
   "reason": ""
 }
+
+## How to Test
+
+1. Clone the repo
+2. Checkout branch 'development'
+3. Go to root directory 'indian-insurance'.
 
 # Option 1 (Live environment without any configuration)
 This application is deployed to 'https://render.com/'.
@@ -331,4 +408,8 @@ Some improvements are required, these are intentionly not done due to time const
 
 11. Use custome error handlers for invalid endpoints (404, 500 status codes)
 
-12. Creating postman collection file for unit testing.
+12. Use locust to test the performance
+
+13. Use sphinx documentation
+
+14. Creating postman collection file for unit testing.
