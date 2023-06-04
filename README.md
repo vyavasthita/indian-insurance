@@ -3,7 +3,7 @@ Backend for Indian Insurance Company
 This has been implemented using Flask.
 
 # Python Version
-3.10.8
+3.10.6
 
 # Webserver
 gunicorn
@@ -55,11 +55,11 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 # Highligts
 - Gunicorn production web server is used.
 - Python Logging is done for Console and File.
-- Unit tests implemented.
+- Unit tests implemented. Coverage is 42%.
 - Password is randomly generated and hashed before inserting into database.
 - Functions and method type annotations is written wherever possible.
 - Docstrings added.
-- While inserting data to multiple tables during sign up, sqlalchemy transaction is used. So   either all records are inserted or none.
+- While inserting data to multiple tables during sign up, sqlalchemy transaction is used. So either all records are inserted or none.
 - Email verification expiration time is configurable.
 - Comments were added wherever possible.
 - If any exception occurred while connecting to DB then 500 status code with message will be returned to client.
@@ -76,12 +76,14 @@ multiple commits happen and if one or more fails.
 3. Extra attribute is passed in request.
 4. Required attribute is not passed in request.
 5. Customer Name attribute has more than 2 spaces.
-6. Email address is in invalid format.
-7. Insurance plan name is more than 200 characters.
-8. Insured Amount is more than 50000
-9. Data type validation for json body
-10. Blacklisted email
-11. Duplicated email during registration are validated.
+6. Customer Name attribute's is greator than 50 characters.
+7. Email address is in invalid format.
+8. Email attribute's is greator than 50 characters.
+9. Insurance plan name is more than 200 characters.
+10. Insured Amount is more than 50000
+11. Data type validation for json body
+12. Blacklisted email
+13. Duplicated email during registration are validated.
 
 # Testing
 - This app is tested on Ubuntu 22.04 LTS.
@@ -115,7 +117,7 @@ Some improvements are required, these are intentionlly not done due to time cons
 1. Sending email takes little time, this requires debugging.
     Or we need to use some background task using Celery/RQ.
 
-2. Use supervisor if required to restart post some error in application.
+2. Use supervisor if required to restart the app automatically post some error in application.
 
 3. API documentation using swagger
 
@@ -128,6 +130,8 @@ Some improvements are required, these are intentionlly not done due to time cons
 7. Separate requirements.txt file for different environments or use of poetry.
 
 8. Some of the responses sent to client are more of a developer use. While client should only see generic message.
+
+9. Unit test coverage
 
 # Pending
 Some of the endpoints should be accessed once user is signed up, this is not yet done

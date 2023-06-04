@@ -33,7 +33,7 @@ from dotenv import load_dotenv
 base_dir = os.path.abspath(os.path.dirname(__name__))
 
 
-load_dotenv()
+load_dotenv() # to load .env file. .flaskenv file is automatically loaded without using load_dotenv()
 
 
 class Config:
@@ -45,9 +45,18 @@ class Config:
 
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
     
-    # DATABASE url to be connected by the app
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI') or 'sqlite:///' + os.path.join(base_dir, 'insurance.db')
+    MYSQL_USER = os.getenv('MYSQL_USER')
+    MYSQL_HOST = os.getenv('MYSQL_HOST')
+    MYSQL_DB = os.getenv('MYSQL_DB')
+    MYSQL_PORT = os.getenv('MYSQL_PORT')
+
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or \
+        "mysql://" + MYSQL_USER + ":" + "@" + MYSQL_HOST + ":" + MYSQL_PORT + "/" + MYSQL_DB
     
+    # DATABASE url to be connected by the app
+    # SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI') or 'sqlite:///' + os.path.join(base_dir, 'insurance.db')
+    
+
     # We do not want to track the modifications done in the DB.
     SQLALCHEMY_TRACK_MODIFICATIONS = ast.literal_eval(os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', default = False))
     

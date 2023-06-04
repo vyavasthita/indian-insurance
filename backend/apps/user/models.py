@@ -31,9 +31,9 @@ class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key = True)
-    customer_name = db.Column(db.String(40), nullable=False)
-    email_address = db.Column(db.String(60), index=True, unique=True, nullable=False)
-    password = db.Column(db.String(100), unique=True, nullable=False)
+    customer_name = db.Column(db.String(50), nullable=False)
+    email_address = db.Column(db.String(50), index=True, unique=True, nullable=False)
+    password = db.Column(db.String(200), unique=True, nullable=False)
     insurances = db.relationship('Insurance', backref='user', lazy='dynamic') # One to Many
     userprofiles = db.relationship('UserProfile', backref='customerprofile', uselist=False) # One to One
 

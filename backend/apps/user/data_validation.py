@@ -48,6 +48,9 @@ def validate_customer_name(customer_name: str) -> tuple:
     if space_count > max_spaces_allowed:
         return False, "'{}' Spaces found. Max '{}' spaces are allowed.".format(space_count, max_spaces_allowed)
     
+    if len(customer_name) > 50:
+        return False, "Customer Name too long with '{}' characters. Max '{}' characters are allowed.".format(len(customer_name), 50)
+
     return True, None
 
 def validate_insurance_plan_name(insurance_plan_name: str) -> tuple:

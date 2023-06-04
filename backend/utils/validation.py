@@ -36,6 +36,9 @@ def check_valid_email(email: str) -> bool:
     Returns:
         bool: Valid or invalid email format
     """
+    if len(email) > 50:
+        return False, "Email too long with '{}' characters. Max '{}' characters are allowed.".format(len(email), 50)
+
     try:
         # Validating the `email`
         emailObject = validate_email(email)

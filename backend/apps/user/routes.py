@@ -197,6 +197,7 @@ def register():
     file_name = os.path.join(file_path, 'verification_email.txt')
 
     InsuranceLogger.log_debug(f"Writing verification email template to file {file_name}.")
+
     with open(file=file_name, mode='w') as f:
         f.write(html_template)
 
