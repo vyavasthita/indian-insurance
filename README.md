@@ -11,12 +11,30 @@ This has been implemented using Flask.
 2. Docker Compose version v2.17.3
 3. Docker version 23.0.6
 
+# Python Packages Used
+- flask
+- flask-sqlalchemy
+- flask-migrate
+- flask-wtf
+- flask-mail
+- gunicorn
+- flask-cors
+- pytest
+- pytest-cov
+- email-validator
+- python-dotenv
+
 # Webserver
 gunicorn
 Gunicorn configuration is found under apps/config/gunicorn_conf.py
 
 # Sending email
-Ref: https://mailtrap.io/blog/flask-email-sending/
+Ref: https://mailtrap.io/blog/flask-email-sending/ and gmail.
+
+Note: Along with sending email, email template is also stored locally as a file.
+
+Verification email file -> ./backend/verification_email.txt
+Email email file -> ./backend/welcome_email.txt
 
 # Assumptions
 - I have supported 'content-type' with 'application/json' only.
@@ -57,7 +75,7 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
     email_address, string(60), indexed, unique, not null
     reason, string(100), null
 
-## Best Practices followed
+# Best Practices followed
 01. Production web server gunicorn
 02. Normalized DB Schema
 03. Python Logging - Console and File
@@ -84,18 +102,18 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 
 # Extras Done
 1. App is deployed live on https://indian-insurance.onrender.com/api/user/register
-2. An blacklist url is provided 
+2. A blacklist api endpoint is provided. See below. 
 
 # Validations Done
-1. Not a Json Format
-2. Invalid Json Format
-3. Extra attribute is passed in request.
-4. Required attribute is not passed in request.
-5. Customer Name attribute has more than 2 spaces.
-6. Customer Name attribute's is greator than 50 characters.
-7. Email address is in invalid format.
-8. Email attribute's is greator than 50 characters.
-9. Insurance plan name is more than 200 characters.
+01. Not a Json Format
+02. Invalid Json Format
+03. Extra attribute is passed in request.
+04. Required attribute is not passed in request.
+05. Customer Name attribute has more than 2 spaces.
+06. Customer Name attribute's is greator than 50 characters.
+07. Email address is in invalid format.
+08. Email attribute's is greator than 50 characters.
+09. Insurance plan name is more than 200 characters.
 10. Insured Amount is more than 50000
 11. Data type validation for json body
 12. Blacklisted email
@@ -106,19 +124,6 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 - Automated unit tests have been written using pytest.
 - Automated Unit test coverage is 42%.
 
-# Python Packages Used
-- flask
-- flask-sqlalchemy
-- flask-migrate
-- flask-wtf
-- flask-mail
-- gunicorn
-- flask-cors
-- pytest
-- pytest-cov
-- email-validator
-- python-dotenv
-
 # HTTP Status code used
 - HTTP_200_OK = 200
 - HTTP_201_CREATED = 201
@@ -126,35 +131,6 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 - HTTP_404_NOT_FOUND = 404
 - HTTP_422_UNPROCESSABLE_ENTITY = 422
 - HTTP_500_INTERNAL_SERVER_ERROR = 500
-
-# Improvements Required, To Do
-Some improvements are required, these are intentionly not done due to time constraints.
-
-1. Sending email takes little time, this requires debugging.
-    Or we need to use some background task using Celery/RQ.
-
-2. Use supervisor if required to restart the app automatically post some error in application.
-
-3. API documentation using swagger
-
-4. Serialization - I did not use any serialization library like marshmallow. I just used simple python dict with flask jsonify().
-
-5. CORS for all domain is enable. Later we need to make it configurable for particular domains.
-
-6. Different configurations for differnent environments like Dev, test, QA, Production.
-
-7. Separate requirements.txt file for different environments or use poetry.
-
-8. Some of the responses sent to client are more of a developer use. While client should only see generic message.
-
-9. More automated unit tests need to be written specially for db crud operations and also by using mocking.
-
-10. Unit test coverage should improve.
-
-11. Use custome error handlers for invalid endpoints (404, 500 status codes)
-
-# Pending
-Some of the endpoints should be accessed once user is signed up, this is not yet done
 
 ## How to Test
 
@@ -164,7 +140,7 @@ Some of the endpoints should be accessed once user is signed up, this is not yet
 
 I have used 'www.gmail.com' with some tweaks to emails.
 
-# Blacklisting if email
+# Blacklisting of email
 
 I have created an API endpoint for marking emails as blacklisted. 
 This is to avoid manual addition of email in database.
@@ -328,3 +304,31 @@ Docker and Docker compose must be installed.
     Now we need to use 'app password'. Refere below page for this.
 
     https://myaccount.google.com/lesssecureapps
+
+# Improvements Required, To Do
+Some improvements are required, these are intentionly not done due to time constraints.
+
+1. Sending email takes little time, this requires debugging.
+    Or we need to use some background task using Celery/RQ.
+
+2. Use supervisor if required to restart the app automatically post some error in application.
+
+3. API documentation using swagger
+
+4. Serialization - I did not use any serialization library like marshmallow. I just used simple python dict with flask jsonify().
+
+5. CORS for all domain is enable. Later we need to make it configurable for particular domains.
+
+6. Different configurations for differnent environments like Dev, test, QA, Production.
+
+7. Separate requirements.txt file for different environments or use poetry.
+
+8. Some of the responses sent to client are more of a developer use. While client should only see generic message.
+
+9. More automated unit tests need to be written specially for db crud operations and also by using mocking.
+
+10. Unit test coverage should improve.
+
+11. Use custome error handlers for invalid endpoints (404, 500 status codes)
+
+12. Creating postman collection file for unit testing.
