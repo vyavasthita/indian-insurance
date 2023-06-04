@@ -17,7 +17,8 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 - Registration mail like is valid for configurable number of seconds.
 - For blacklisted emails, we are sending https status code 422 with message
   saying "Email Validation Failed. You are not allowed to create an account with us."
-- Insurance Plan is NOT pre populated in DB, So user can use any new name for it.
+- Insurance Plan is NOT pre populated in DB, So user can use any new name for it. Also
+  insurance plan name is not unique in DB.
 - Validation for Indian Currency is not done because any insurance amount is valid amount
   due to denominations of Rs 1 & 2. 
 
@@ -37,7 +38,7 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 
 3. InsurancePlan
     id, integer, PK
-    insurance_plan_name, string(200), unique, not null
+    insurance_plan_name, string(200), not null
     
 4. Insurance
     id, integer, PK
@@ -77,6 +78,7 @@ multiple commits happen and if one or more fails.
 7. Insured Amount is more than 50000
 8. Data type validation for json body
 9. Blacklisted email
+10. Duplicated email during registration are validated.
 
 # Testing
 - This app is tested on Ubuntu 22.04 LTS.

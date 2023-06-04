@@ -69,7 +69,7 @@ class InsurancePlan(db.Model):
     __tablename__ = 'insuranceplan'
 
     id = db.Column(db.Integer, primary_key = True)
-    insurance_plan_name = db.Column(db.String(200), unique=True, nullable=False)
+    insurance_plan_name = db.Column(db.String(200), nullable=False)
     insurances = db.relationship('Insurance', backref='insurance_plan', lazy='dynamic')
 
     def __init__(self, insurance_plan_name: str) -> None:

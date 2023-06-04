@@ -45,6 +45,32 @@ user_blueprint = Blueprint(name='user', import_name=__name__,
                            url_prefix='/user'
                 )
 
+def is_already_registered(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        input_data = json.loads(request.data.decode('utf-8'))
+        
+        email_address = input_data['email_address']
+
+        is_success, message, user = UserDao.get_user_by_email(email_address=email_address)
+
+        if not is_success:
+            return {
+                        "status": "INTERNAL-SERVER-ERROR",
+                        "reason": message
+                    }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+        elif user is not None:
+            InsuranceLogger.log_info(f"User with Email {email_address} is already registered.")
+            return {
+                        "status": "VALIDATION-ERROR",
+                        "reason": "User with Email '{}' is already registered.".format(email_address)
+                    }, HttpStatus.HTTP_400_BAD_REQUEST
+
+        return func(*args, **kwargs)
+    
+    return wrapper
+        
+        
 def check_blacklisting(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -84,6 +110,7 @@ def home():
 @validate_schema
 @validate_data
 @check_blacklisting
+@is_already_registered
 def register():
     """
     This is the user registration api endpoint.
@@ -102,6 +129,8 @@ def register():
     InsuranceLogger.log_debug(
         f"Received user registration with Customer Name {customer_name}, Email Address {email_address}, Insurance Plan Name {insurance_plan_name}, Insured Amount {insured_amount}."
     )
+
+    InsuranceLogger.log_info(f"Verifying if customer with email id {email_address} is already registered.")
 
     # Customer has passed all validations, now proceed with customer
     InsuranceLogger.log_info(f"Generating random password.")
@@ -217,7 +246,7 @@ def confirm_user(token):
                     "reason": message
                 }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
     elif user is None:
-        print(r"User with Email {email} is not found.")
+        InsuranceLogger.log_error(f"User with Email {email} is not found.")
         return {
                     "status": "INVALID-USER",
                     "reason": "User with Email '{}' is not found.".format(email)
