@@ -1,25 +1,18 @@
+import os
 import json
+import csv
 import pytest
 
+test_schema_dir = "tests/sample_test_schema"
+not_supported_json_file_name = os.path.join(test_schema_dir, "not_supported_content_types.csv")
+invalid_json_file_name = os.path.join(test_schema_dir, "invalid_json.csv")
 
-def not_supported_content_types():
-    for ct in [("text/html", 400), ("multipart/form-data", 400), ("x-www-form-urlencoded", 400)]:
-        yield ct
+def read_test_data_from_csv(file_name):
+    with open(file_name, newline="") as csvfile:
+        data = csv.reader(csvfile, delimiter=",")
+        next(data)  # skip header row
 
-def invalid_jsons():
-    data = [
-        (
-        '{ "customer_name": Customer 1", "email_address": "user1@gmail.com", "insurance_plan_name": "Abc", "insured_amount": 300000}', 
-        400
-        ), 
-        (
-        '{ "customer_name": "Customer 1", "email_address": "user1@gmail.com" "insurance_plan_name": "Abc", "insured_amount": 300000}', 
-        400
-        ), 
-    ]
-
-    for j in data:
-        yield j
+        return [[row[0], int(row[1])] for row in data if row]
 
 def test_index(app, client):
     response = client.get('/user/home')
@@ -33,7 +26,7 @@ def json_of_response(response):
     return json.loads(response.data.decode('utf8'))
 
 @pytest.mark.schema_validation
-@pytest.mark.parametrize("content_type, expected_status_code", not_supported_content_types())
+@pytest.mark.parametrize("content_type, expected_status_code", read_test_data_from_csv(not_supported_json_file_name))
 def test_content_type_not_json(client, content_type, expected_status_code):
     url = '/user/register'
 
@@ -60,7 +53,7 @@ def test_content_type_not_json(client, content_type, expected_status_code):
             }
 
 @pytest.mark.schema_validation
-@pytest.mark.parametrize("payload, expected_status_code", invalid_jsons())
+@pytest.mark.parametrize("payload, expected_status_code", read_test_data_from_csv(invalid_json_file_name))
 def test_invalid_json_payload(client, payload, expected_status_code):
     url = '/user/register'
 
@@ -74,3 +67,8 @@ def test_invalid_json_payload(client, payload, expected_status_code):
     response = client.post(url, data=payload, headers=headers)
 
     assert response.status_code == expected_status_code
+
+    assert json_of_response(response) == { 
+                "status": "VALIDATION-ERROR", 
+                "reason": "Invalid Json Format"
+            }
