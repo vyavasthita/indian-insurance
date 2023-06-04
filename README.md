@@ -20,7 +20,6 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 
 # Assumptions
 - I have supported 'content-type' with 'application/json' only.
-- Blacklisted emails are manually inserted into Blacklist DB table.
 - Registration mail like is valid for configurable number of seconds.
 - For blacklisted emails, we are sending https status code 422 with message
   saying "Email Validation Failed. You are not allowed to create an account with us."
@@ -58,24 +57,34 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
     email_address, string(60), indexed, unique, not null
     reason, string(100), null
 
-# Highligts
-- App is deployed live on https://indian-insurance.onrender.com/user/register
-- Gunicorn production web server is used.
-- Python Logging is done for Console and File.
-- Unit tests implemented. Coverage is 42%.
-- Password is randomly generated and hashed before inserting into database.
-- Functions and method type annotations is written wherever possible.
-- Docstrings added.
-- While inserting data to multiple tables during sign up, sqlalchemy transaction is used. So either all records are inserted or none.
-- Email verification expiration time is configurable.
-- Comments were added wherever possible.
-- If any exception occurred while connecting to DB then 500 status code with message will be returned to client.
-- I have added some HTML pages with Flask-Form package. Though it was not necessory, i just added for testing purpose.
-- I have used SqlAlchemy DB session transaction using context manager to do rollback when
-multiple commits happen and if one or more fails.
-- All import statements are declared in order. 
-    Also similiar modules are imported in order.
-    Python core -> flask -> flask third party -> application modules
+## Best Practices followed
+01. Production web server gunicorn
+02. Normalized DB Schema
+03. Python Logging - Console and File
+04. Hashing of generated password
+05. Use of exception handling
+06. Proper HTTP status codes
+07. Doc string added for all modules and methods
+08. Type annotations are added for all methods.
+09. Docker with docker compose used. Both Sqlite and production db mysql is used.
+10. Use of environment variables.
+11. Unit tests with coverage report
+12. Detailed README file.
+13. Proper git commit messages. Every commit is done post completing a functionality.
+14. Pep8 naming convention for modules, classes, methods, functions and variables.
+15. Comments added wherever required.
+16. Use of sqlalchemy transaction for rollback if failure.
+17. Use of Makefile to each in using the application.
+18. Manual steps are minimal while testing the app.
+19. Proper directory and file structure of source code.
+20. Import statements are in order.
+    - Python core -> flask -> flask third party -> application modules
+
+    Also related modules are imported in order.
+
+# Extras Done
+1. App is deployed live on https://indian-insurance.onrender.com/api/user/register
+2. An blacklist url is provided 
 
 # Validations Done
 1. Not a Json Format
@@ -95,7 +104,7 @@ multiple commits happen and if one or more fails.
 # Testing
 - This app is tested on Ubuntu 22.04 LTS.
 - Automated unit tests have been written using pytest.
-- Automated Unit test coverage is 43%.
+- Automated Unit test coverage is 42%.
 
 # Python Packages Used
 - flask
@@ -111,12 +120,12 @@ multiple commits happen and if one or more fails.
 - python-dotenv
 
 # HTTP Status code used
-HTTP_200_OK = 200
-HTTP_201_CREATED = 201
-HTTP_400_BAD_REQUEST = 400
-HTTP_404_NOT_FOUND = 404
-HTTP_422_UNPROCESSABLE_ENTITY = 422
-HTTP_500_INTERNAL_SERVER_ERROR = 500
+- HTTP_200_OK = 200
+- HTTP_201_CREATED = 201
+- HTTP_400_BAD_REQUEST = 400
+- HTTP_404_NOT_FOUND = 404
+- HTTP_422_UNPROCESSABLE_ENTITY = 422
+- HTTP_500_INTERNAL_SERVER_ERROR = 500
 
 # Improvements Required, To Do
 Some improvements are required, these are intentionly not done due to time constraints.
@@ -147,10 +156,6 @@ Some improvements are required, these are intentionly not done due to time const
 # Pending
 Some of the endpoints should be accessed once user is signed up, this is not yet done
 
-# Note
-Initially I have created flask form for sign up for testing purpose.
-Relevant code and html are still part of code. This could be deleted later.
-
 ## How to Test
 
 1. Clone the repo
@@ -158,6 +163,26 @@ Relevant code and html are still part of code. This could be deleted later.
 3. Go to root directory 'indian-insurance'.
 
 I have used 'www.gmail.com' with some tweaks to emails.
+
+# Blacklisting if email
+
+I have created an API endpoint for marking emails as blacklisted. 
+This is to avoid manual addition of email in database.
+
+Go to browser and hit url -> <domain>/api/user/blacklist
+
+Type: POST
+
+content-type: multipart/form-data
+
+URL: <domain>/api/user/blacklist
+
+Json Payload:
+
+{
+  "email_address": "<Email>",
+  "reason": ""
+}
 
 # Option 1 (Live environment without any configuration)
 This application is deployed to 'https://render.com/'.
@@ -167,15 +192,15 @@ This application is deployed to 'https://render.com/'.
 
     Type: POST
 
-    URL: https://indian-insurance.onrender.com/user/register
+    URL: https://indian-insurance.onrender.com/api/user/register
 
     Json Payload:
 
     {
-        "customer_name": "Cusomer 1",
-        "email_address": "User 1@gmail.com",
-        "insurance_plan_name": "Family",
-        "insured_amount": 300000
+        "customer_name": "<Customer Name>",
+        "email_address": "<Email>",
+        "insurance_plan_name": "<Insurance Plan Name>",
+        "insured_amount": <Insurance Amount>
     }
 
 2. My Email Credentials are deployed to above environment.
@@ -213,15 +238,15 @@ Use a Ubuntu OS
 
     Type: POST
 
-    URL: http://127.0.0.1:5000/user/register
+    URL: http://127.0.0.1:5000/api/user/register
 
     Json Payload:
 
     {
-        "customer_name": "Cusomer 1",
-        "email_address": "User 1@gmail.com",
-        "insurance_plan_name": "Family",
-        "insured_amount": 300000
+        "customer_name": "<Customer Name>",
+        "email_address": "<Email>",
+        "insurance_plan_name": "<Insurance Plan Name>",
+        "insured_amount": <Insurance Amount>
     }
 
 9. To Run unit tests
@@ -269,15 +294,15 @@ Docker and Docker compose must be installed.
 
     Type: POST
 
-    URL: http://127.0.0.1:5000/user/register
+    URL: http://127.0.0.1:5000/api/user/register
 
     Json Payload:
     
     {
-        "customer_name": "Cusomer 1",
-        "email_address": "User 1@gmail.com",
-        "insurance_plan_name": "Family",
-        "insured_amount": 300000
+        "customer_name": "<Customer Name>",
+        "email_address": "<Email>",
+        "insurance_plan_name": "<Insurance Plan Name>",
+        "insured_amount": <Insurance Amount>
     }
 
 6. To access MySql db, use phpmyadmin.
@@ -295,6 +320,7 @@ Docker and Docker compose must be installed.
     - make stop
 
 10. We need to update backend/.env file with email credentials we are going to use.
+
     MAIL_USERNAME=<Your email>
     MAIL_PASSWORD=<app password>
 

@@ -107,7 +107,7 @@ class Blacklist(db.Model):
     email_address = db.Column(db.String(60), index=True, unique=True, nullable=False)
     reason = db.Column(db.String(100))
 
-    def __init__(self, email_address: str, reason: str) -> None:
+    def __init__(self, email_address: str, reason: str = None) -> None:
         self.email_address = email_address
         self.reason = reason
 

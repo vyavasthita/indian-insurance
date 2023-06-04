@@ -29,10 +29,11 @@ import os
 from functools import wraps
 from flask.blueprints import Blueprint
 from flask import render_template, request, jsonify, redirect, url_for
-from apps.user.dao import UserInsuranceDao, BlacklistDao, UserProfileDao, UserDao
-from apps import configuration, db
+from apps.user.dao import UserInsuranceDao, BlacklistDao, UserDao
+from apps import configuration
 from apps.user.schema_validation import validate_schema
 from apps.user.data_validation import validate_data
+from apps.user.forms import UserBlacklistForm
 from utils.password_helper import PasswordGenerator
 from utils.token import TokenHelper
 from utils.email import send_email
@@ -42,7 +43,7 @@ from utils.insurance_logger import InsuranceLogger
 
 user_blueprint = Blueprint(name='user', import_name=__name__, 
                            template_folder='templates/user',
-                           url_prefix='/user'
+                           url_prefix='/api/user'
                 )
 
 def is_already_registered(func):
@@ -94,6 +95,53 @@ def check_blacklisting(func):
         
         return func(*args, **kwargs)
     return wrapper
+
+@user_blueprint.route("/blacklist", methods = ['GET', 'POST'])
+def blacklist():
+    """
+    This is the user admin.
+    This page is used by admin.
+
+    Returns:
+        response: Status code and message in Json format
+    """
+    form = UserBlacklistForm()
+
+    if form.validate_on_submit():
+        email_address = form.email_address.data
+        reason = form.reason.data
+
+        InsuranceLogger.log_info(f"Checking blacklisting for user with email {email_address}.")
+
+        is_success, message, result = BlacklistDao.get_blacklist_by_email(
+                                                    email_address = email_address
+                                                )
+        if not is_success:
+            return {
+                        "status": "INTERNAL-SERVER-ERROR",
+                        "reason": message
+                    }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+        elif result is not None:
+            return {
+                        "status": "Success",
+                        "reason": "Email '{}' is already blacklisted.".format(email_address)
+                    }, HttpStatus.HTTP_200_OK
+        else:   # black list email
+            is_success, message, result = BlacklistDao.add_blacklist(
+                                                        email_address = email_address
+                                                    )
+            if not is_success:
+                return {
+                            "status": "INTERNAL-SERVER-ERROR",
+                            "reason": message
+                        }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+            else:
+                return {
+                            "status": "Success",
+                            "reason": "Email '{}' is blacklisted successfully.".format(email_address)
+                        }, HttpStatus.HTTP_200_OK
+            
+    return render_template('blacklist.html', form = form)
 
 @user_blueprint.route("/home", methods = ['GET'])
 def home():

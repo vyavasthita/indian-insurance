@@ -337,7 +337,7 @@ class BlacklistDao:
     @staticmethod
     def add_blacklist(
             email_address: str,
-            reason: str
+            reason: str = None
             ) -> tuple:
         """
         Create new blacklisted email in database.
