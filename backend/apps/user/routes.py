@@ -117,10 +117,19 @@ def register():
     with open(file=file_name, mode='w') as f:
         f.write(html_template)
 
-    return {
-                "status": "Success",
-                "reason": "Thanks for the registration. You will soon receive a verification email on your email '{}'. Please verify the email to activate your account.".format(email_address)
-            }, HttpStatus.HTTP_201_CREATED
+    new_user = dict()
+
+    new_user['Customer Name'] = user_insurance.user.customer_name
+    new_user['Email Address'] = email_address
+    new_user['Insurance Plan'] = user_insurance.insurance_plan.insurance_plan_name
+    new_user['Insurance Amount'] = user_insurance.insured_amount
+
+    return jsonify(new_user), HttpStatus.HTTP_201_CREATED
+    
+    # return {
+    #             "status": "Success",
+    #             "reason": "Thanks for the registration. You will soon receive a verification email on your email '{}'. Please verify the email to activate your account.".format(email_address)
+    #         }, HttpStatus.HTTP_201_CREATED
 
 @user_blueprint.route('/confirm/<token>')
 def confirm_user(token):
@@ -209,13 +218,3 @@ def confirm_user(token):
                 "reason": "Thanks for the registration. You will soon receive a welcome email on your email '{}'.".format(email)
             }, HttpStatus.HTTP_200_OK
 
-@user_blueprint.route("/welcome", methods = ['GET'])
-def welcome():
-    """
-    This is the post user registration api endpoint.
-    Post successfull registration, user is sent a welcome email.
-
-    Returns:
-        response: Status code and message in Json format
-    """
-    return render_template('welcome.html')
