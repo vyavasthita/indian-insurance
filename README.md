@@ -47,3 +47,8 @@ Gunicorn configuration is found under apps/config/gunicorn_conf.py
 # Assumptions
 For blacklisted emails, we are sending https status code 422 with message
 saying "Email Validation Failed. You are not allowed to create an account with us."
+
+# Improvements Required
+Sending email takes little time, this requires debugging.
+Or we need to use some background task using Celery.
+I did not do this as it requires more time.

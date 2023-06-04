@@ -97,7 +97,7 @@ def register():
     
     confirm_url = url_for('user.confirm_user', token=token, _external=True)
 
-    html_template = render_template('verification.html', confirm_url=confirm_url)
+    html_template = render_template('verification.html', customer_name = customer_name, confirm_url=confirm_url)
 
     subject = "Please verify your email"
     is_success, message, result = send_email(email_address, subject, html_template)
@@ -143,56 +143,65 @@ def confirm_user(token):
                     "status": "INVALID-USER",
                     "reason": "User with Email '{}' is not found.".format(email)
                 }, HttpStatus.HTTP_404_NOT_FOUND
+    print(f"User with email {email} is found in User DB table, now update user activation status.")
+    # User is found in User DB table, now update user activation status
     
-    # User is found in User DB table
-    # Now search User in UserProfile DB table by passing FK user
-    is_success, message, user_profile = UserProfileDao.get_profile_by_user(user=user)
+    print(f"Checking if User with email {email} is already activated.")
+
+    if user.userprofiles.activated:
+        # As user is already activated, so no need to update database, just return the status to user
+        print(f"User with email id {email} is already activated.")
+        return {
+                    "status": "ALREADY-ACTIVATED",
+                    "reason": "User with Email '{}' is already activated.".format(email)
+                }, HttpStatus.HTTP_200_OK
+
+    # Now we need to update activation status of given user in database
+    is_success, message, result = UserDao.update_profile_by_activation(
+        user=user, 
+        activated=True
+    )
+
+    if not is_success:
+        print(f"Failed to update activation status for user with {email}.")
+        return {
+                    "status": "INTERNAL-SERVER-ERROR",
+                    "reason": "Activation for email id '{}' failed due to server error.".format(email)
+                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+    
+    print(f"Activation status for user with {email} is successfully done.")
+
+    # Now we need to send Welcome email post successful registration
+
+    html_template = render_template('welcome.html', customer_name=user.customer_name)
+
+    subject = "Welcome to Indian Insurance"
+
+    is_success, message, result = send_email(email, subject, html_template)
 
     if not is_success:
         return {
                     "status": "INTERNAL-SERVER-ERROR",
                     "reason": message
                 }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
-    elif user_profile is None:
-        print(r"User with Email {email} is not found.")
-        return {
-                    "status": "INVALID-USER",
-                    "reason": "User with Email '{}' is not found.".format(email)
-                }, HttpStatus.HTTP_404_NOT_FOUND
     
-    print("User", user.id)
-    print("Customer Profile id", user_profile.id)
-    print("Customer Profile", user_profile.customerprofile)
-    print("Customer Is activated", user_profile.activated, type(user_profile.activated))
-    print("********************************************")
-    
-    if user_profile.activated:
-        print(f"User with email id {email} is already activated.")
-        return {
-                    "status": "ALREADY-ACTIVATED",
-                    "reason": "User with Email '{}' is already activated.".format(email)
-                }, HttpStatus.HTTP_200_OK
-    
-    else:
-        is_success, message, result = UserProfileDao.update_profile_by_activation(
-            user_profile=user_profile, 
-            activated=True
-        )
-        print('Email is successfully verified. Thanks!')
+    print(f"Registration for user with {email} is successfully done. Welcome email is sent to user.")
 
+    return {
+                "status": "Success",
+                "reason": "Thanks for the registration. You will soon receive a welcome email on your email '{}'.".format(email)
+            }, HttpStatus.HTTP_200_OK
 
-    return redirect(url_for('user.post_verification'))
-
-@user_blueprint.route("/post_registration", methods = ['GET'])
-def post_registration():
+@user_blueprint.route("/welcome", methods = ['GET'])
+def welcome():
     """
     This is the post user registration api endpoint.
-    Post successfull registration, user is redirected to this page.
+    Post successfull registration, user is sent a welcome email.
 
     Returns:
         response: Status code and message in Json format
     """
-    return render_template('post_registration.html')
+    return render_template('welcome.html')
 
 @user_blueprint.route("/post_verification", methods = ['GET'])
 def post_verification():

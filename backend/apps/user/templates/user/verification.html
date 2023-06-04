@@ -2,8 +2,15 @@
 
 {% block content %}
     <h1>
-        Click the below link to activate your account
-
+        Dear {{ customer_name }}, 
+        <br>
+        <br>
+        Thanks for the registration.
+        <br>
+        <br>
+        Please click the below link to activate your account.
+        <br>
+        <br>
         <p><a href="{{ confirm_url }}">{{ confirm_url }}</a></p>
     </h1>
 {% endblock %}

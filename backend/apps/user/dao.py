@@ -117,19 +117,42 @@ class UserDao:
 
         with db.session.begin():
             try:
-                result = db.session.query(User.id).filter_by(email_address=email_address)
-
-                if result is not None:
-                    result = result.first()
+                result = User.query.filter_by(email_address=email_address).first()
                 
             except SQLAlchemyError as err:
                 print("Failed to search user by email in database. {}.".format(str(err)))
                 return False, "Failed to update database.", None
             
-
-
         return True, None, result
             
+    @staticmethod
+    def update_profile_by_activation(
+            user: User,
+            activated: bool
+            ) -> tuple:
+        """
+        Update activation status of given user.
+
+        Args:
+            user (User): User whose activation status needs to be updated.
+            activated (bool): Activation status, whether or not activated.
+
+        Returns:
+            tuple: status, message, result
+                    status is boolean value indicating success (True) or Failure(False),
+                    message is a string about the error occurred if any, otherwise None,
+                    result is the actual response generated from DB Query or None otherwise.
+        """
+        try:
+            user.userprofiles.activated = activated
+            db.session.add(user)
+            db.session.commit()
+        except SQLAlchemyError as err:
+            print("Failed to update user activation in database. {}.".format(str(err)))
+            return False, "Failed to update database.", None
+        
+        return True, None, user.userprofiles.activated
+
 class UserProfileDao:
     @staticmethod
     def add_profile(

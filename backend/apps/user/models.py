@@ -8,8 +8,8 @@ class User(db.Model):
     customer_name = db.Column(db.String(40), nullable=False)
     email_address = db.Column(db.String(60), index=True, unique=True, nullable=False)
     password = db.Column(db.String(100), unique=True, nullable=False)
-    insurances = db.relationship('Insurance', backref='user', lazy='dynamic')
-    userprofiles = db.relationship('UserProfile', backref='customerprofile', uselist=False)
+    insurances = db.relationship('Insurance', backref='user', lazy='dynamic') # One to Many
+    userprofiles = db.relationship('UserProfile', backref='customerprofile', uselist=False) # One to One
 
     def __init__(self, customer_name, email_address, password):
         self.customer_name = customer_name
