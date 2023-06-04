@@ -1,4 +1,5 @@
 import json
+import os
 from flask.blueprints import Blueprint
 from flask import render_template, request, jsonify, redirect, url_for
 from apps.user.dao import UserInsuranceDao, BlacklistDao, UserProfileDao, UserDao
@@ -108,6 +109,14 @@ def register():
                     "reason": message
                 }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
     
+    # Also write mail template to text file temporarily, this should be removed later
+    file_path = os.path.abspath(os.path.dirname(__name__))
+    file_name = os.path.join(file_path, 'verification_email.txt')
+
+    print(f"Writing verification email template to file {file_name}.")
+    with open(file=file_name, mode='w') as f:
+        f.write(html_template)
+
     return {
                 "status": "Success",
                 "reason": "Thanks for the registration. You will soon receive a verification email on your email '{}'. Please verify the email to activate your account.".format(email_address)
@@ -187,6 +196,14 @@ def confirm_user(token):
     
     print(f"Registration for user with {email} is successfully done. Welcome email is sent to user.")
 
+    # Also write mail template to text file temporarily, this should be removed later
+    file_path = os.path.abspath(os.path.dirname(__name__))
+    file_name = os.path.join(file_path, 'welcome_email.txt')
+
+    print(f"Writing welcome email template to file {file_name}.")
+    with open(file=file_name, mode='w') as f:
+        f.write(html_template)
+
     return {
                 "status": "Success",
                 "reason": "Thanks for the registration. You will soon receive a welcome email on your email '{}'.".format(email)
@@ -202,15 +219,3 @@ def welcome():
         response: Status code and message in Json format
     """
     return render_template('welcome.html')
-
-@user_blueprint.route("/post_verification", methods = ['GET'])
-def post_verification():
-    """
-    This is the post user verification api endpoint.
-    Post successfull verification, user is redirected to this page.
-
-    Returns:
-        response: Status code and message in Json format
-    """
-    return render_template('post_verification.html')
-

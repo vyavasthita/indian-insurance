@@ -161,3 +161,6 @@ cython_debug/
 
 # Ignore backend sqlite db file
 backend/insurance.db
+
+verification_email.txt
+welcome_email.txt
