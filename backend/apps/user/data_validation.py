@@ -29,6 +29,8 @@ import json
 from functools import wraps
 from flask import request
 from utils.http_status import HttpStatus
+from utils.validation import check_valid_email
+from utils.insurance_logger import InsuranceLogger
 
 
 def validate_customer_name(customer_name: str) -> tuple:
@@ -103,6 +105,18 @@ def validate_data(func):
             return {
                         "status": "VALIDATION-ERROR",
                         "reason": "Invalid Data in 'customer_name' attribute. {}".format(message)
+                    }, HttpStatus.HTTP_400_BAD_REQUEST
+        
+        InsuranceLogger.log_info(f"Validating email {input_data['email_address']}")
+
+        valid, message = check_valid_email(input_data['email_address'])
+
+        if not valid:
+            InsuranceLogger.log_info(f"Invalid Email Address. {message}")
+
+            return {
+                        "status": "VALIDATION-ERROR",
+                        "reason": "Invalid Email Address. {}".format(message)
                     }, HttpStatus.HTTP_400_BAD_REQUEST
         
         valid, message = validate_insurance_plan_name(input_data['insurance_plan_name'])

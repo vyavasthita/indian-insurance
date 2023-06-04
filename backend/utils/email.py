@@ -13,7 +13,7 @@ About; -
 
 Working; -
 ----------
-    This modules sends email to given receipients.
+    This module sends email to given receipients.
     This module uses 'flask-mail' module to send email.
 
 Uses; -

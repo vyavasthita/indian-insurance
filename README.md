@@ -76,11 +76,12 @@ multiple commits happen and if one or more fails.
 3. Extra attribute is passed in request.
 4. Required attribute is not passed in request.
 5. Customer Name attribute has more than 2 spaces.
-6. Insurance plan name is more than 200 characters.
-7. Insured Amount is more than 50000
-8. Data type validation for json body
-9. Blacklisted email
-10. Duplicated email during registration are validated.
+6. Email address is in invalid format.
+7. Insurance plan name is more than 200 characters.
+8. Insured Amount is more than 50000
+9. Data type validation for json body
+10. Blacklisted email
+11. Duplicated email during registration are validated.
 
 # Testing
 - This app is tested on Ubuntu 22.04 LTS.
@@ -97,6 +98,7 @@ multiple commits happen and if one or more fails.
 - flask-cors
 - pytest
 - pytest-cov
+- email-validator
 
 # HTTP Status code used
 HTTP_200_OK = 200
