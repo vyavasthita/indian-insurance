@@ -45,12 +45,12 @@ user_blueprint = Blueprint(name='user', import_name=__name__,
                            url_prefix='/user'
                 )
 
-InsuranceLogger.log_info("This is Indian Insurance Company")
-
 def check_blacklisting(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         input_data = json.loads(request.data.decode('utf-8'))
+
+        InsuranceLogger.log_info(f"Checking blacklisting for user with email {input_data['email_address']}.")
 
         is_success, message, result = BlacklistDao.get_blacklist_by_email(
                                                     email_address = input_data['email_address']
@@ -99,7 +99,13 @@ def register():
     insurance_plan_name = input_data['insurance_plan_name']
     insured_amount = input_data['insured_amount']
 
+    InsuranceLogger.log_debug(
+        f"Received user registration with Customer Name {customer_name}, Email Address {email_address}, Insurance Plan Name {insurance_plan_name}, Insured Amount {insured_amount}."
+    )
+
     # Customer has passed all validations, now proceed with customer
+    InsuranceLogger.log_info(f"Generating random password.")
+
     password_generator = PasswordGenerator(configuration.PASSWORD_LENGTH)
     password = password_generator.generate_password()
     
@@ -119,6 +125,8 @@ def register():
     
     # User is created, now generate email token for the user
     token_helper = TokenHelper()
+
+    InsuranceLogger.log_info(f"Generating confirmation token.")
     is_success, message, token = token_helper.generate_confirmation_token(email=email_address)
 
     if not is_success:
@@ -138,6 +146,9 @@ def register():
         )
 
     subject = "Please verify your email"
+
+    InsuranceLogger.log_info(f"Sending email to {email_address}.")
+
     is_success, message, result = send_email(email_address, subject, html_template)
 
     if not is_success:
@@ -150,7 +161,7 @@ def register():
     file_path = os.path.abspath(os.path.dirname(__name__))
     file_name = os.path.join(file_path, 'verification_email.txt')
 
-    print(f"Writing verification email template to file {file_name}.")
+    InsuranceLogger.log_debug(f"Writing verification email template to file {file_name}.")
     with open(file=file_name, mode='w') as f:
         f.write(html_template)
 
@@ -160,6 +171,10 @@ def register():
     new_user['Email Address'] = email_address
     new_user['Insurance Plan'] = user_insurance.insurance_plan.insurance_plan_name
     new_user['Insurance Amount'] = user_insurance.insured_amount
+
+    InsuranceLogger.log_debug(
+        f"Returning response for newly registered user. {new_user}"
+    )
 
     return jsonify(new_user), HttpStatus.HTTP_201_CREATED
     
@@ -172,6 +187,10 @@ def register():
 def confirm_user(token):
     token_helper = TokenHelper()
 
+    InsuranceLogger.log_info(
+        f"validating the confirmation token."
+    )
+
     is_success, message, email = token_helper.validate_token(token)
 
     if not is_success:
@@ -179,12 +198,17 @@ def confirm_user(token):
                     "status": "VERIFICATION-EXPIRED",
                     "reason": message
                 }, HttpStatus.HTTP_404_NOT_FOUND
+    
+    InsuranceLogger.log_info(
+        f"Token is valid and not expired. Decoded email is {email}."
+    )
 
     """
     Token is valid and not expired. And we have retreived the decoded email
     """
     # Find the user using his email id from User DB table
-    print(f"Searching user with email id {email} in User DB table.")
+
+    InsuranceLogger.log_info(f"Searching user with email id {email} in User DB table.")
     is_success, message, user = UserDao.get_user_by_email(email_address=email)
 
     if not is_success:
@@ -198,14 +222,15 @@ def confirm_user(token):
                     "status": "INVALID-USER",
                     "reason": "User with Email '{}' is not found.".format(email)
                 }, HttpStatus.HTTP_404_NOT_FOUND
-    print(f"User with email {email} is found in User DB table, now update user activation status.")
+    
+    InsuranceLogger.log_info(f"User with email {email} is found in User DB table, now update user activation status.")
     # User is found in User DB table, now update user activation status
     
-    print(f"Checking if User with email {email} is already activated.")
+    InsuranceLogger.log_info(f"Checking if User with email {email} is already activated.")
 
     if user.userprofiles.activated:
         # As user is already activated, so no need to update database, just return the status to user
-        print(f"User with email id {email} is already activated.")
+        InsuranceLogger.log_info(f"User with email id {email} is already activated.")
         return {
                     "status": "ALREADY-ACTIVATED",
                     "reason": "User with Email '{}' is already activated.".format(email)
@@ -218,13 +243,13 @@ def confirm_user(token):
     )
 
     if not is_success:
-        print(f"Failed to update activation status for user with {email}.")
+        InsuranceLogger.log_error(f"Failed to update activation status for user with {email}.")
         return {
                     "status": "INTERNAL-SERVER-ERROR",
                     "reason": "Activation for email id '{}' failed due to server error.".format(email)
                 }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
     
-    print(f"Activation status for user with {email} is successfully done.")
+    InsuranceLogger.log_info(f"Activation status for user with {email} is successfully done.")
 
     # Now we need to send Welcome email post successful registration
 
@@ -240,13 +265,14 @@ def confirm_user(token):
                     "reason": message
                 }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
     
-    print(f"Registration for user with {email} is successfully done. Welcome email is sent to user.")
+    InsuranceLogger.log_info(f"Registration for user with {email} is successfully done. Welcome email is sent to user.")
 
     # Also write mail template to text file temporarily, this should be removed later
     file_path = os.path.abspath(os.path.dirname(__name__))
     file_name = os.path.join(file_path, 'welcome_email.txt')
 
-    print(f"Writing welcome email template to file {file_name}.")
+    InsuranceLogger.log_debug(f"Writing welcome email template to file {file_name}.")
+
     with open(file=file_name, mode='w') as f:
         f.write(html_template)
 

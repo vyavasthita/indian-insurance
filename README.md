@@ -52,6 +52,7 @@ Ref: https://mailtrap.io/blog/flask-email-sending/
 
 # Highligts
 - Gunicorn production web server is used.
+- Python Logging is done for Console and File.
 - Password is randomly generated and hashed before inserting into database.
 - Functions and method type annotations is written wherever possible.
 - Docstrings added.

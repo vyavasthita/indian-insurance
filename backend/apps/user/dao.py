@@ -34,6 +34,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from apps import db
 from apps.user.models import User, UserProfile, InsurancePlan, Insurance, Blacklist
 from utils.security  import generate_password_hash
+from utils.insurance_logger import InsuranceLogger
 
 
 class UserInsuranceDao():
@@ -61,6 +62,7 @@ class UserInsuranceDao():
                     message is a string about the error occurred if any, otherwise None,
                     result is the actual response generated from DB Query or None otherwise.
         """
+        
         # Hash the password before making an entry into database
         user = User(
                     customer_name = customer_name,
@@ -82,6 +84,8 @@ class UserInsuranceDao():
                     insurance_plan = insurance_plan             
                 )
 
+        InsuranceLogger.log_info(f"Adding user information for customer {user.customer_name}.")
+
         with db.session.begin():
             try:
                 db.session.add(user)
@@ -89,7 +93,7 @@ class UserInsuranceDao():
                 db.session.add(insurance_plan)
                 db.session.add(insurance)
             except SQLAlchemyError as err:
-                print("Failed to add insurance data into database. {}.".format(str(err)))
+                InsuranceLogger.log_error(f"Failed to add insurance data into database. {str(err)}.")
                 return False, "Failed to update database.", None
    
         return True, None, insurance
@@ -120,11 +124,13 @@ class UserDao:
                     email_address = email_address,
                     password = password
                 )
+        InsuranceLogger.log_info(f"Adding customer {user.customer_name} in database.")
+
         with db.session.begin():
             try:
                 db.session.add(user)
             except SQLAlchemyError as err:
-                print("Failed to add user data into database. {}.".format(str(err)))
+                InsuranceLogger.log_error(f"Failed to add user data into database. {str(err)}.")
                 return False, "Failed to update database.", None
                   
         return True, None, user
@@ -147,12 +153,14 @@ class UserDao:
         """
         result = None
 
+        InsuranceLogger.log_info(f"Getting user with email {email_address} from database.")
+
         with db.session.begin():
             try:
                 result = User.query.filter_by(email_address=email_address).first()
                 
             except SQLAlchemyError as err:
-                print("Failed to search user by email in database. {}.".format(str(err)))
+                InsuranceLogger.log_error(f"Failed to search user by email in database. {str(err)}.")
                 return False, "Failed to update database.", None
             
         return True, None, result
@@ -175,12 +183,14 @@ class UserDao:
                     message is a string about the error occurred if any, otherwise None,
                     result is the actual response generated from DB Query or None otherwise.
         """
+        InsuranceLogger.log_info(f"Updating profile for user {user.customer_name} with activation to {activated}.")
+
         try:
             user.userprofiles.activated = activated
             db.session.add(user)
             db.session.commit()
         except SQLAlchemyError as err:
-            print("Failed to update user activation in database. {}.".format(str(err)))
+            InsuranceLogger.log_error(f"Failed to update user activation in database. {str(err)}.")
             return False, "Failed to update database.", None
         
         return True, None, user.userprofiles.activated
@@ -212,47 +222,16 @@ class UserProfileDao:
                     activated = activated
                 )
 
+        InsuranceLogger.log_info(f"Add User profile for user {customerprofile.customer_name} in database.")
+
         with db.session.begin():
             try:
                 db.session.add(user_profile)
             except SQLAlchemyError as err:
-                print("Failed to add user profile data into database. {}.".format(str(err)))
+                InsuranceLogger.log_error(f"Failed to add user profile data into database. {str(err)}.")
                 return False, "Failed to update database.", None
                    
         return True, None, user_profile
-    
-    @staticmethod
-    def get_profile_by_user(
-            user: str
-            ) -> tuple:
-        """
-        Search given profile in database by using FK user id.
-
-        Args:
-            user (str): User (Foreign Key) whose profile needs to be searched.
-
-        Returns:
-            tuple: status, message, result
-                    status is boolean value indicating success (True) or Failure(False),
-                    message is a string about the error occurred if any, otherwise None,
-                    result is the actual response generated from DB Query or None otherwise.
-        """
-        result = None
-
-        with db.session.begin():
-            try:
-                result = db.session.query(UserProfile).join(
-                    User, User.id == UserProfile.customerprofile_id
-                )
-
-                if result is not None:
-                    result = result.first()
-
-            except SQLAlchemyError as err:
-                print("Failed to get profile by user from database. {}.".format(str(err)))
-                return False, "Failed to update database.", None
-
-        return True, None, result
     
     @staticmethod
     def update_profile_by_activation(
@@ -272,12 +251,14 @@ class UserProfileDao:
                     message is a string about the error occurred if any, otherwise None,
                     result is the actual response generated from DB Query or None otherwise.
         """
+        InsuranceLogger.log_info(f"Updating profile for user {user_profile.user.customer_name} with activation to {activated}.")
+        
         try:
             user_profile.activated = activated
             db.session.add(user_profile)
             db.session.commit()
         except SQLAlchemyError as err:
-            print("Failed to update profile by activation in database. {}.".format(str(err)))
+            InsuranceLogger.log_error(f"Failed to update profile by activation in database. {str(err)}.")
             return False, "Failed to update database.", None
         
         return True, None, None
@@ -303,11 +284,13 @@ class InsurancePlanDao:
                     insurance_plan_name = insurance_plan_name             
                 )
 
+        InsuranceLogger.log_info(f"Adding Insurance Plan {insurance_plan_name} in database.")
+
         with db.session.begin():
             try:
                 db.session.add(insurance_plan)
             except SQLAlchemyError as err:
-                print("Failed to add insurance plan in database. {}.".format(str(err)))
+                InsuranceLogger.log_error(f"Failed to add insurance plan in database. {str(err)}.")
                 return False, "Failed to update database.", None
             
         return True, None, insurance_plan
@@ -339,11 +322,13 @@ class InsuranceDao:
                     insurance_plan = insurance_plan             
                 )
 
+        InsuranceLogger.log_info(f"Adding Insurance for user {user.customer_name} with insurance plan {insurance_plan.insurance_plan_name} and amount {insured_amount} in database.")
+
         with db.session.begin():
             try:
                 db.session.add(insurance)
             except SQLAlchemyError as err:
-                print("Failed to add insurance in database. {}.".format(str(err)))
+                InsuranceLogger.log_error(f"Failed to add insurance in database. {str(err)}.")
                 return False, "Failed to update database.", None
 
         return True, None, insurance
@@ -372,11 +357,13 @@ class BlacklistDao:
                     reason = reason
                 )
         
+        InsuranceLogger.log_info(f"Adding blacklist for {email_address} in database.")
+
         with db.session.begin():
             try:
                 db.session.add(blacklist)
             except SQLAlchemyError as err:
-                print("Failed to add blacklist in database. {}.".format(str(err)))
+                InsuranceLogger.log_error(f"Failed to add blacklist in database. {str(err)}.")
                 return False, "Failed to update database.", None
             
         return True, None, blacklist
@@ -399,11 +386,13 @@ class BlacklistDao:
         """
         result = None
 
+        InsuranceLogger.log_info(f"Getting blacklist detail for {email_address} from database.")
+
         with db.session.begin():
             try:
                 result = db.session.query(Blacklist.id).filter_by(email_address=email_address).first()
             except SQLAlchemyError as err:
-                print("Failed to get blacklist by email from database. {}.".format(str(err)))
+                InsuranceLogger.log_error(f"Failed to get blacklist by email from database. {str(err)}.")
                 return False, "Failed to update database.", None
         
         return True, None, result
