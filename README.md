@@ -84,6 +84,8 @@ multiple commits happen and if one or more fails.
 
 # Testing
 - This app is tested on Ubuntu 22.04 LTS.
+- Automated unit tests have been written using pytest.
+- Automated Unit test coverage is 43%.
 
 # Python Packages Used
 - flask
@@ -94,6 +96,7 @@ multiple commits happen and if one or more fails.
 - gunicorn
 - flask-cors
 - pytest
+- pytest-cov
 
 # HTTP Status code used
 HTTP_200_OK = 200
