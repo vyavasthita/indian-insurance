@@ -1,5 +1,6 @@
 # indian-insurance
 Backend for Indian Insurance Company
+This has been implemented using Flask.
 
 # Python Version
 3.10.8
@@ -84,13 +85,14 @@ multiple commits happen and if one or more fails.
 - This app is tested on Ubuntu 22.04 LTS.
 
 # Python Packages Used
-flask
-flask-sqlalchemy
-flask-migrate
-flask-wtf
-flask-mail
-gunicorn
-flask-cors
+- flask
+- flask-sqlalchemy
+- flask-migrate
+- flask-wtf
+- flask-mail
+- gunicorn
+- flask-cors
+- pytest
 
 # HTTP Status code used
 HTTP_200_OK = 200
@@ -116,7 +118,7 @@ Some improvements are required, these are intentionlly not done due to time cons
 
 6. Different configurations for differnent environments like Dev, test, QA, Production.
 
-7. Separate requirements.txt file for different environments.
+7. Separate requirements.txt file for different environments or use of poetry.
 
 # Pending
 Some of the endpoints should be accessed once user is signed up, this is not yet done

@@ -26,14 +26,13 @@ Reference; -
 
 import os
 
-
 # The root directory where the sqlite db file is created.
 base_dir = os.path.abspath(os.path.dirname(__name__))
 
 
 class Config:
     FLASK_ENV = os.getenv('FLASK_ENV', default='main.py')
-    DEBUG = os.getenv('DEBUG', default=True)
+    DEBUG = os.getenv('DEBUG', default=False)
 
     # To be used by Flask Form (WTF package)
     SECRET_KEY = os.getenv('SECRET_KEY') or 'not really a secret'
