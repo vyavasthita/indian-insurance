@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_mail import Mail
+from flask_cors import CORS
 from apps.config.config import Config
 
 
@@ -29,6 +30,8 @@ def register_blueprints(app):
 
 def create_app():
     app = Flask(__name__)
+
+    CORS(app)
 
     initialize_config(app=app)
 

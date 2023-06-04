@@ -2,6 +2,7 @@ from typing import Any
 from sqlalchemy.exc import SQLAlchemyError
 from apps import db
 from apps.user.models import User, UserProfile, InsurancePlan, Insurance, Blacklist
+from utils.security  import generate_password_hash
 
 
 class UserInsuranceDao():
@@ -29,11 +30,12 @@ class UserInsuranceDao():
                     status is boolean value indicating success (True) or Failure(False),
                     message is a string about the error occurred if any, otherwise None,
                     result is the actual response generated from DB Query or None otherwise.
-        """    
+        """
+        # Hash the password before making an entry into database
         user = User(
                     customer_name = customer_name,
                     email_address = email_address,
-                    password = password
+                    password = generate_password_hash(password)
                 )
         
         user_profile = UserProfile(

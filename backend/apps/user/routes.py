@@ -71,7 +71,7 @@ def register():
     # Customer has passed all validations, now proceed with customer
     password_generator = PasswordGenerator(configuration.PASSWORD_LENGTH)
     password = password_generator.generate_password()
-
+    
     is_success, message, user_insurance = UserInsuranceDao.add_user_insurance(
         customer_name = customer_name,
         email_address = email_address,
@@ -98,7 +98,13 @@ def register():
     
     confirm_url = url_for('user.confirm_user', token=token, _external=True)
 
-    html_template = render_template('verification.html', customer_name = customer_name, confirm_url=confirm_url)
+    html_template = render_template(
+            'verification.html', 
+            customer_name = customer_name, 
+            email_address = email_address,
+            password = password,
+            confirm_url=confirm_url
+        )
 
     subject = "Please verify your email"
     is_success, message, result = send_email(email_address, subject, html_template)
