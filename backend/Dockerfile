@@ -61,15 +61,14 @@ COPY ./apps /app/apps
 COPY ./migrations /app/migrations
 COPY ./utils /app/utils
 COPY .flaskenv .
-COPY docker-entrypoint.sh .
+COPY entrypoint.sh .
 COPY wsgi.py .
 
 # Copy files for unit tests
 COPY ./tests /app/tests
 COPY .coveragerc .
 
-RUN chmod +x ./docker-entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
-ENTRYPOINT ["sh", "docker-entrypoint.sh"]
+ENTRYPOINT ["sh", "entrypoint.sh"]
 
-# ENTRYPOINT [ "/app/docker-entrypoint.sh" ]
