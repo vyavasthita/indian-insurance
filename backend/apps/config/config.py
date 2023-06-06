@@ -84,3 +84,6 @@ class Config:
     # Email authentication
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')

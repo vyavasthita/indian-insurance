@@ -23,6 +23,8 @@ This has been implemented using Flask.
 - pytest-cov
 - email-validator
 - python-dotenv
+- celery
+- redis
 
 # Webserver
 gunicorn
@@ -35,6 +37,9 @@ Note: Along with sending email, email template is also stored locally as a file.
 
 Verification email file -> ./backend/verification_email.txt
 Email email file -> ./backend/welcome_email.txt
+
+# Celery Worker
+celery -A wsgi.celery worker --pool=solo --loglevel=info
 
 # Source Code Folder Structure
 

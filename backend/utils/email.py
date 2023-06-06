@@ -27,8 +27,10 @@ Reference; -
 
 from flask_mail import Message
 from apps import mail, configuration
+from apps import celery
 
 
+@celery.task()
 def send_email(to: str, subject: str, template: str) -> tuple:
     """To send email
 

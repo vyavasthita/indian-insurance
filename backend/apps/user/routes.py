@@ -27,6 +27,7 @@ Reference; -
 import json
 import os
 from functools import wraps
+from celery.result import AsyncResult
 from flask.blueprints import Blueprint
 from flask import render_template, request, jsonify, redirect, url_for
 from apps.user.dao import UserInsuranceDao, BlacklistDao, UserDao
@@ -70,8 +71,7 @@ def is_already_registered(func):
         return func(*args, **kwargs)
     
     return wrapper
-        
-        
+               
 def check_blacklisting(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -154,6 +154,15 @@ def home():
     """
     return render_template('home.html')
 
+@user_blueprint.route("/result/<id>", methods=['GET'])
+def task_result(id: str) -> dict[str, object]:
+    result = AsyncResult(id)
+    return {
+        "ready": result.ready(),
+        "successful": result.successful(),
+        "value": result.result if result.ready() else None,
+    }
+
 @user_blueprint.route("/register", methods = ['POST'])
 @validate_schema
 @validate_data
@@ -232,14 +241,9 @@ def register():
 
     InsuranceLogger.log_info(f"Sending email to {email_address}.")
 
-    is_success, message, result = send_email(email_address, subject, html_template)
+    result = send_email.delay(email_address, subject, html_template)
+    print(result)
 
-    if not is_success:
-        return {
-                    "status": "INTERNAL-SERVER-ERROR",
-                    "reason": message
-                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
-    
     # Also write mail template to text file temporarily, this should be removed later
     file_path = os.path.abspath(os.path.dirname(__name__))
     file_name = os.path.join(file_path, 'verification_email.txt')
