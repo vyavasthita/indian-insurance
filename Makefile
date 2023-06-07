@@ -4,6 +4,7 @@ stop:
 	docker compose stop
 
 clean:
+	docker compose stop
 	docker container prune -f
 	docker image prune -f
 

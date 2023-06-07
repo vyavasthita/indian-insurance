@@ -29,14 +29,11 @@ services:
       - indian-insurance-network
   worker:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.Worker
+      context: ./email_worker
     container_name: worker
     hostname: worker
-    # entrypoint: celery
-    command: celery -A wsgi.celery worker --pool=solo --loglevel=info
     env_file:
-      - ./backend/.env
+      - ./email_worker/.env
     links:
       - rabbitmq
     depends_on:
