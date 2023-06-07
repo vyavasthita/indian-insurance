@@ -1,4 +1,4 @@
-all: stop clean run test cov
+all: stop run
 
 stop:
 	docker compose stop

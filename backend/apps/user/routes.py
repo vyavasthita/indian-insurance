@@ -155,7 +155,7 @@ def home():
     return render_template('home.html')
 
 @user_blueprint.route("/result/<id>", methods=['GET'])
-def task_result(id: str) -> dict[str, object]:
+def task_result(id: str):
     result = AsyncResult(id)
     return {
         "ready": result.ready(),
