@@ -1,16 +1,20 @@
 import os
+from celery import Celery
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_mail import Mail
 from flask_cors import CORS
 from apps.config.config import config_by_name
+from apps.config.config import Config
+from utils.make_celery import celery_init_app
 
 
 db = SQLAlchemy()
 migrate = Migrate()
 mail = Mail()
 
+celery = Celery(__name__, broker=Config.CELERY_BROKER_URL, result_backend=Config.CELERY_RESULT_BACKEND) 
 
 environment = os.getenv('FLASK_ENV') or 'development'
 
@@ -39,6 +43,12 @@ def register_blueprints(app):
 
 def create_app() -> Flask:
     app = Flask(__name__)
+
+    print("Enabling CORS.")
+    CORS(app)
+
+    # Configure celery
+    celery.conf.update(app.config)  
 
     print("Initializing Flask Configuration.")
     initialize_config(app=app)

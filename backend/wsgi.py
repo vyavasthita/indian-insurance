@@ -26,9 +26,13 @@ Reference; -
 
 from apps import create_app
 
+app = create_app()
+
+app.app_context().push()
+
+from apps import celery
 
 if __name__ == '__main__':
-    application = create_app()
-    application.run()
+    app.run()
 else:
     application = create_app()

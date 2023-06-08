@@ -5,7 +5,7 @@ SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
 @file email.py
 @author Dilip Kumar Sharma
 @copyright Seneca Global
-@date 3rd Jun 2023
+@date 7th Jun 2023
 
 About; -
 --------
@@ -26,18 +26,17 @@ Reference; -
 """
 
 import os
-from flask_mail import Message
-from apps import mail, configuration
 from celery import Celery
+
 
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL'),
 CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
 
 
-celery = Celery('email', broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
+app = Celery('email', broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
 
 
-@celery.task(name='email.send')
+@app.task(name='email.send')
 def send_email(sender: str, to: str, subject: str, template: str) -> tuple:
     """To send email
 
@@ -53,17 +52,9 @@ def send_email(sender: str, to: str, subject: str, template: str) -> tuple:
                 message is a string about the error occurred if any, otherwise None,
                 result is the actual response received or None otherwise.
     """
-    try:
-        msg = Message(
-            subject,
-            recipients=[to],
-            html=template,
-            sender=sender
-        )
-        mail.send(msg)
-    except Exception as err:
-        print(f"Failed to send email. To {to}, sender {sender}.")
-        return False, "Failed to send email.", None
+    print("Sending Email...")
+    print(f"Sender {sender}, Receiver {to}, Subject {subject}")
+    print("*******************************************************")
     
     # Success/failure, Message, Result
     return True, None, None

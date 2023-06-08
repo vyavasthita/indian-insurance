@@ -27,6 +27,7 @@ Reference; -
 import json
 import os
 from functools import wraps
+from celery.result import AsyncResult
 from flask.blueprints import Blueprint
 from flask import render_template, request, jsonify, redirect, url_for
 from apps.user.dao import UserInsuranceDao, BlacklistDao, UserDao
@@ -34,6 +35,7 @@ from apps import configuration
 from apps.user.schema_validation import validate_schema
 from apps.user.data_validation import validate_data
 from apps.user.forms import UserBlacklistForm
+from apps import celery
 from utils.password_helper import PasswordGenerator
 from utils.token import TokenHelper
 from utils.email import send_email
@@ -70,8 +72,7 @@ def is_already_registered(func):
         return func(*args, **kwargs)
     
     return wrapper
-        
-        
+               
 def check_blacklisting(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -154,6 +155,15 @@ def home():
     """
     return render_template('home.html')
 
+@user_blueprint.route("/result/<id>", methods=['GET'])
+def task_result(id: str):
+    result = AsyncResult(id)
+    return {
+        "ready": result.ready(),
+        "successful": result.successful(),
+        "value": result.result if result.ready() else None,
+    }
+
 @user_blueprint.route("/register", methods = ['POST'])
 @validate_schema
 @validate_data
@@ -232,14 +242,8 @@ def register():
 
     InsuranceLogger.log_info(f"Sending email to {email_address}.")
 
-    is_success, message, result = send_email(email_address, subject, html_template)
+    celery.send_task('email.send', (configuration.MAIL_DEFAULT_SENDER, email_address, subject, html_template))
 
-    if not is_success:
-        return {
-                    "status": "INTERNAL-SERVER-ERROR",
-                    "reason": message
-                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
-    
     # Also write mail template to text file temporarily, this should be removed later
     file_path = os.path.abspath(os.path.dirname(__name__))
     file_name = os.path.join(file_path, 'verification_email.txt')
@@ -341,13 +345,7 @@ def confirm_user(token):
 
     subject = "Welcome to Indian Insurance"
 
-    is_success, message, result = send_email(email, subject, html_template)
-
-    if not is_success:
-        return {
-                    "status": "INTERNAL-SERVER-ERROR",
-                    "reason": message
-                }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+    celery.send_task('email.send', (configuration.MAIL_DEFAULT_SENDER, email, subject, html_template))
     
     InsuranceLogger.log_info(f"Registration for user with {email} is successfully done. Welcome email is sent to user.")
 
@@ -364,4 +362,3 @@ def confirm_user(token):
                 "status": "Success",
                 "reason": "Thanks for the registration. You will soon receive a welcome email on your email '{}'.".format(email)
             }, HttpStatus.HTTP_200_OK
-
