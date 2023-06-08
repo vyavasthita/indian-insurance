@@ -7,6 +7,7 @@ COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY __init__.py .
+COPY config.py .
 COPY worker.py .
 
 ENTRYPOINT celery -A worker worker --autoscale 10 --loglevel=info

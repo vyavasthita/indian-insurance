@@ -60,7 +60,6 @@ RUN pip install mysqlclient
 COPY ./apps /app/apps
 COPY ./migrations /app/migrations
 COPY ./utils /app/utils
-COPY .flaskenv .
 COPY entrypoint.sh .
 COPY wsgi.py .
 

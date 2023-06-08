@@ -97,6 +97,10 @@ class DevelopmentConfig:
     # Log File name
     LOG_FILE_NAME = os.getenv('LOG_FILE_NAME_DEV') or 'insurance.log'
 
+    # Celery Configuration
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL_DEV')
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND_DEV')
+
     # mail settings
     MAIL_SERVER = os.getenv('MAIL_SERVER_DEV')
     MAIL_PORT = ast.literal_eval(os.getenv('MAIL_PORT_DEV'))
@@ -152,6 +156,10 @@ class AutomatedTestingConfig:
 
     # Log File name
     LOG_FILE_NAME = os.getenv('LOG_FILE_NAME_AUT_TESTING') or 'insurance.log'
+
+    # Celery Configuration
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL_AUT_TESTING')
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND_AUT_TESTING')
 
     # mail settings
     MAIL_SERVER = os.getenv('MAIL_SERVER_AUT_TESTING')

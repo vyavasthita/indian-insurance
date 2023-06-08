@@ -175,6 +175,8 @@ celery -A wsgi.celery worker --pool=solo --loglevel=info
     - Python core -> flask -> flask third party -> application modules
 
     Also related modules are imported in order.
+21. Sending Email is done by using background tasks using Celery, RabbitMQ, Redis.
+22. Different configurations for differnent environments like Dev, test, QA, Production.
 
 # Extras Done
 1. App is deployed live on https://indian-insurance.onrender.com/api/user/register
@@ -390,31 +392,26 @@ Docker and Docker compose must be installed.
 # Improvements Required, To Do
 Some improvements are required, these are intentionly not done due to time constraints.
 
-1. Sending email takes little time, this requires debugging.
-    Or we need to use some background task using Celery/RQ.
+1. Use supervisor if required to restart the app automatically post some error in application.
 
-2. Use supervisor if required to restart the app automatically post some error in application.
+2. API documentation using swagger
 
-3. API documentation using swagger
+3. Serialization - I did not use any serialization library like marshmallow. I just used simple python dict with flask jsonify().
 
-4. Serialization - I did not use any serialization library like marshmallow. I just used simple python dict with flask jsonify().
+4. CORS for all domain is enable. Later we need to make it configurable for particular domains.
 
-5. CORS for all domain is enable. Later we need to make it configurable for particular domains.
+5. Separate requirements.txt file for different environments or use poetry.
 
-6. Different configurations for differnent environments like Dev, test, QA, Production.
+6. Some of the responses sent to client are more of a developer use. While client should only see generic message.
 
-7. Separate requirements.txt file for different environments or use poetry.
+7. More automated unit tests need to be written specially for db crud operations and also by using mocking.
 
-8. Some of the responses sent to client are more of a developer use. While client should only see generic message.
+8. Unit test coverage should improve.
 
-9. More automated unit tests need to be written specially for db crud operations and also by using mocking.
+9. Use custome error handlers for invalid endpoints (404, 500 status codes)
 
-10. Unit test coverage should improve.
+10. Use locust to test the performance
 
-11. Use custome error handlers for invalid endpoints (404, 500 status codes)
+11. Use sphinx documentation
 
-12. Use locust to test the performance
-
-13. Use sphinx documentation
-
-14. Creating postman collection file for unit testing.
+12. Creating postman collection file for unit testing.

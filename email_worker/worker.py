@@ -26,14 +26,19 @@ Reference; -
 """
 
 import os
+from flask_mail import Mail, Message
 from celery import Celery
+from config import config_by_name
 
 
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL'),
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+environment = os.getenv('FLASK_ENV') or 'development'
+config = config_by_name[environment]
 
+# Configure email
+mail = Mail()
+mail.init_mail(config=config)
 
-app = Celery('email', broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
+app = Celery('email', broker=config['CELERY_BROKER_URL'], backend=config['CELERY_RESULT_BACKEND'])
 
 
 @app.task(name='email.send')
@@ -55,6 +60,18 @@ def send_email(sender: str, to: str, subject: str, template: str) -> tuple:
     print("Sending Email...")
     print(f"Sender {sender}, Receiver {to}, Subject {subject}")
     print("*******************************************************")
+
+    try:
+        msg = Message(
+            subject,
+            recipients=[to],
+            html=template,
+            sender=sender
+        )
+        mail.send(msg)
+    except Exception as err:
+        print(f"Failed to send email. To {to}, sender {sender}. {str(err)}")
+        return False, "Failed to send email.", None
     
     # Success/failure, Message, Result
     return True, None, None
