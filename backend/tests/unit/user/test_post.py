@@ -15,7 +15,7 @@ def read_test_data_from_csv(file_name):
         return [[row[0], int(row[1])] for row in data if row]
 
 def test_index(app, client):
-    response = client.get('/user/home')
+    response = client.get('api/user/home')
     assert response.status_code == 200
 
 def json_of_request(json_dict):
@@ -28,7 +28,7 @@ def json_of_response(response):
 @pytest.mark.schema_validation
 @pytest.mark.parametrize("content_type, expected_status_code", read_test_data_from_csv(not_supported_json_file_name))
 def test_content_type_not_json(client, content_type, expected_status_code):
-    url = '/user/register'
+    url = 'api/user/register'
 
     mimetype = content_type
     headers = {
@@ -55,7 +55,7 @@ def test_content_type_not_json(client, content_type, expected_status_code):
 @pytest.mark.schema_validation
 @pytest.mark.parametrize("payload, expected_status_code", read_test_data_from_csv(invalid_json_file_name))
 def test_invalid_json_payload(client, payload, expected_status_code):
-    url = '/user/register'
+    url = 'api/user/register'
 
     mimetype = 'application/json'
 

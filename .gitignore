@@ -121,6 +121,8 @@ celerybeat.pid
 
 # Environments
 .env
+.env.dev
+.env.aut_test
 .venv
 env/
 venv/
@@ -160,7 +162,7 @@ cython_debug/
 #.idea/
 
 # Ignore backend sqlite db file
-backend/insurance.db
+backend/*.db
 database/data
 verification_email.txt
 welcome_email.txt
