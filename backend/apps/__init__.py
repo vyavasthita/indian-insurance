@@ -18,7 +18,6 @@ environment = os.getenv('FLASK_ENV') or 'development'
 ### Helper Functions ###
 def initialize_config(app):   
    app.config.from_object(config_by_name[environment])
-   print(app.config)
 
 def create_log_directory():
     base_dir = os.path.abspath(os.path.dirname(__name__))

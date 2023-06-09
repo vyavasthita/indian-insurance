@@ -28,6 +28,7 @@ Reference; -
 import json
 from functools import wraps
 from flask import request
+from apps.user.dao import UserDao, UserInsuranceDao, BlacklistDao
 from utils.http_status import HttpStatus
 from utils.validation import check_valid_email
 from utils.insurance_logger import InsuranceLogger
@@ -139,4 +140,54 @@ def validate_data(func):
                     }, HttpStatus.HTTP_400_BAD_REQUEST
 
         return func(*args, **kwargs)
+    return wrapper
+
+
+def check_blacklisting(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        input_data = json.loads(request.data.decode('utf-8'))
+
+        InsuranceLogger.log_info(f"Checking blacklisting for user with email {input_data['email_address']}.")
+
+        is_success, message, result = BlacklistDao.get_blacklist_by_email(
+                                                    email_address = input_data['email_address']
+                                                )
+        if not is_success:
+            return {
+                        "status": "INTERNAL-SERVER-ERROR",
+                        "reason": message
+                    }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+        elif result is not None:
+            return {
+                        "status": "VALIDATION-ERROR",
+                        "reason": "Email Validation Failed. You are not allowed to create an account with us."
+                    }, HttpStatus.HTTP_422_UNPROCESSABLE_ENTITY
+        
+        return func(*args, **kwargs)
+    return wrapper
+
+def is_already_registered(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        input_data = json.loads(request.data.decode('utf-8'))
+        
+        email_address = input_data['email_address']
+
+        is_success, message, user = UserDao.get_user_by_email(email_address=email_address)
+
+        if not is_success:
+            return {
+                        "status": "INTERNAL-SERVER-ERROR",
+                        "reason": message
+                    }, HttpStatus.HTTP_500_INTERNAL_SERVER_ERROR
+        elif user is not None:
+            InsuranceLogger.log_info(f"User with Email {email_address} is already registered.")
+            return {
+                        "status": "VALIDATION-ERROR",
+                        "reason": "User with Email '{}' is already registered.".format(email_address)
+                    }, HttpStatus.HTTP_400_BAD_REQUEST
+
+        return func(*args, **kwargs)
+    
     return wrapper

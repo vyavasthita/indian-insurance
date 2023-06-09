@@ -25,6 +25,7 @@ This has been implemented using Flask.
 - python-dotenv
 - celery
 - redis
+- flask-restx
 
 # Webserver
 gunicorn
@@ -415,3 +416,5 @@ Some improvements are required, these are intentionly not done due to time const
 11. Use sphinx documentation
 
 12. Creating postman collection file for unit testing.
+
+13. Use SSL for security.
