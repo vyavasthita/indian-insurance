@@ -178,6 +178,7 @@ celery -A wsgi.celery worker --pool=solo --loglevel=info
     Also related modules are imported in order.
 21. Sending Email is done by using background tasks using Celery, RabbitMQ, Redis.
 22. Different configurations for differnent environments like Dev, test, QA, Production.
+23. API documentation using swagger
 
 # Extras Done
 1. App is deployed live on https://indian-insurance.onrender.com/api/user/register
@@ -395,7 +396,7 @@ Some improvements are required, these are intentionly not done due to time const
 
 1. Use supervisor if required to restart the app automatically post some error in application.
 
-2. API documentation using swagger
+2. Use SSL for security.
 
 3. Serialization - I did not use any serialization library like marshmallow. I just used simple python dict with flask jsonify().
 
@@ -416,5 +417,3 @@ Some improvements are required, these are intentionly not done due to time const
 11. Use sphinx documentation
 
 12. Creating postman collection file for unit testing.
-
-13. Use SSL for security.
