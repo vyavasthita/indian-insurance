@@ -1,0 +1,18 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<form method="POST">
+    {{ form.hidden_tag() }}
+
+    {{ form.customer_name.label }} {{ form.customer_name }}
+    <br>
+    {{ form.email_address.label }} {{ form.email_address }}
+    <br>
+    {{ form.insurance_plan_name.label }} {{ form.insurance_plan_name }}
+    <br>
+    {{ form.insured_amount.label }} {{ form.insured_amount }}
+    <br>
+    {{ form.submit() }}
+</form>
+
+{% endblock %}

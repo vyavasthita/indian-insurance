@@ -1,0 +1,2 @@
+invalid_json,http_status_code
+"{""customer_name"": Customer 1"", ""email_address"": ""user1@gmail.com"", ""insurance_plan_name"": ""Abc"", ""insured_amount"": 300000}",400
