@@ -1,10 +1,10 @@
 """Data Validation for endpoints.
 
-SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+DILIP SHARMA CONFIDENTIAL & PROPRIETARY
 
 @file data_validation.py
 @author Dilip Kumar Sharma
-@copyright Seneca Global
+@copyright Dilip Sharma
 @date 3rd Jun 2023
 
 About; -

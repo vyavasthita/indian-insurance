@@ -1,10 +1,10 @@
 """Password generator helper
 
-SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+DILIP SHARMA CONFIDENTIAL & PROPRIETARY
 
 @file password_helper.py
 @author Dilip Kumar Sharma
-@copyright Seneca Global
+@copyright Dilip Sharma
 @date 2nd Jun 2023
 
 About; -

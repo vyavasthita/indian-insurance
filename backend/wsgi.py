@@ -1,10 +1,10 @@
 """Main applicationo module
 
-SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+DILIP SHARMA CONFIDENTIAL & PROPRIETARY
 
 @file wsgi.py
 @author Dilip Kumar Sharma
-@copyright Seneca Global
+@copyright Dilip Sharma
 @date 3rd Jun 2023
 
 About; -

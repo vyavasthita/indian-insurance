@@ -1,10 +1,10 @@
 """Logging wrapper to provide single object for logging.
 
-SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+DILIP SHARMA CONFIDENTIAL & PROPRIETARY
 
 @file insurance_logger.py
 @author Dilip Kumar Sharma
-@copyright Seneca Global
+@copyright Dilip Sharma
 @date 4th Jun 2023
 
 About; -

@@ -1,10 +1,10 @@
 """To send email
 
-SENECA GLOBAL CONFIDENTIAL & PROPRIETARY
+DILIP SHARMA CONFIDENTIAL & PROPRIETARY
 
 @file email.py
 @author Dilip Kumar Sharma
-@copyright Seneca Global
+@copyright Dilip Sharma
 @date 7th Jun 2023
 
 About; -
