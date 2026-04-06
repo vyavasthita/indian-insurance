@@ -30,7 +30,7 @@ verify_api_request_model = verify_ns.model(
         'email_address': fields.String(
                 required=True, 
                 description='Email of Customer', 
-                example="user@senecaglobal.com", 
+                example="user@gmail.com", 
                 min_length=10,
                 max_length=40,
         ),

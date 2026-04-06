@@ -15,7 +15,7 @@ sign_up_api_request_model = sign_up_ns.model(
         'email_address': fields.String(
                 required=True, 
                 description='Email of Customer', 
-                example="user@senecaglobal.com", 
+                example="user@gmail.com", 
                 min_length=10,
                 max_length=40,
         ),
