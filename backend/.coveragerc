@@ -1,0 +1,3 @@
+[run]
+source = apps, utils
+omit = tests/*, __init__.py

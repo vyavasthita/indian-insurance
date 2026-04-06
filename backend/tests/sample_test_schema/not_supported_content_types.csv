@@ -1,0 +1,8 @@
+content_type,http_status_code
+text/html,400
+multipart/form-data,400
+text/plain,400
+application/xml,400
+text/html,400
+image/gif,400
+image/jpeg,400

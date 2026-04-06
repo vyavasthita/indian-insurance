@@ -1,0 +1,95 @@
+version: '3'
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "6379:6379"
+    networks: 
+      - indian-insurance-network
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+    networks: 
+      - indian-insurance-network
+  worker:
+    build:
+      context: ./email_worker
+    container_name: worker
+    hostname: worker
+    env_file:
+      - ./backend/.env.dev
+      - ./backend/.env.aut_test
+    links:
+      - rabbitmq
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks: 
+      - indian-insurance-network
+  mysql-db:
+    image: mysql:8.0.29
+    container_name: mysql-db
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_DATABASE=indianinsurance
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    command: --init-file /data/application/init.sql
+    volumes:
+      - ./database/init.sql:/data/application/init.sql
+      - ./database/data:/var/lib/mysql
+    healthcheck:
+        test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+        timeout: 3s
+        retries: 5
+    networks: 
+      - indian-insurance-network
+  db-admin:    
+    image: phpmyadmin:latest
+    container_name: mysql-db-admin
+    restart: always
+    environment:
+      PMA_HOST: mysql-db
+      PMA_USER: root
+    ports:      
+      - "8080:80"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    networks: 
+      - indian-insurance-network
+  backend:
+    build: ./backend
+    container_name: backend
+    env_file:
+      - ./backend/.env.dev
+      - ./backend/.env.aut_test
+    ports:
+      - 5000:5000
+    networks: 
+      - indian-insurance-network
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+networks:
+  indian-insurance-network:

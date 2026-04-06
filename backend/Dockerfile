@@ -1,0 +1,73 @@
+FROM python:3.8.16-alpine3.18
+
+RUN apk update \
+    && apk add --virtual build-deps gcc python3-dev musl-dev \
+    && apk add --no-cache mariadb-dev
+
+WORKDIR /app
+
+# set environment variables
+# Prevents Python from writing pyc files to disc (equivalent to python -B option)
+ENV PYTHONDONTWRITEBYTECODE 1
+
+# Prevents Python from buffering stdout and stderr (equivalent to python -u option)
+ENV PYTHONUNBUFFERED 1
+
+EXPOSE 5000
+
+ARG SECURITY_PASSWORD_SALT
+ARG MAIL_USERNAME
+ARG MAIL_PASSWORD
+ARG EMAIL_TOKEN_EXPIRATION
+ARG MAIL_DEFAULT_SENDER
+ARG PASSWORD_LENGTH
+ARG LOG_CONFIG_FILE
+ARG LOGS_DIR
+ARG LOG_FILE_NAME
+ARG MAIL_SERVER
+ARG MAIL_PORT
+ARG MAIL_USE_TLS
+ARG MAIL_USE_SSL
+ARG SQLALCHEMY_DATABASE_URI
+ARG SQLALCHEMY_TRACK_MODIFICATIONS
+ARG MYSQL_USER
+ARG MYSQL_HOST
+ARG MYSQL_PORT
+
+ENV SECURITY_PASSWORD_SALT=${SECURITY_PASSWORD_SALT}
+ENV MAIL_USERNAME=${MAIL_USERNAME}
+ENV MAIL_PASSWORD=${MAIL_PASSWORD}
+ENV EMAIL_TOKEN_EXPIRATION=${EMAIL_TOKEN_EXPIRATION}
+ENV MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
+ENV PASSWORD_LENGTH=${PASSWORD_LENGTH}
+ENV LOG_CONFIG_FILE=${LOG_CONFIG_FILE}
+ENV LOGS_DIR=${LOGS_DIR}
+ENV LOG_FILE_NAME=${LOG_FILE_NAME}
+ENV MAIL_SERVER=${MAIL_SERVER}
+ENV MAIL_PORT=${MAIL_PORT}
+ENV MAIL_USE_TLS=${MAIL_USE_TLS}
+ENV MAIL_USE_SSL=${MAIL_USE_SSL}
+ENV SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
+ENV SQLALCHEMY_TRACK_MODIFICATIONS=${SQLALCHEMY_TRACK_MODIFICATIONS}
+ENV MYSQL_USER=${MYSQL_USER}
+ENV MYSQL_HOST=${MYSQL_HOST}
+ENV MYSQL_PORT=${MYSQL_PORT}
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip install mysqlclient
+
+COPY ./apps /app/apps
+COPY ./migrations /app/migrations
+COPY ./utils /app/utils
+COPY entrypoint.sh .
+COPY wsgi.py .
+
+# Copy files for unit tests
+COPY ./tests /app/tests
+COPY .coveragerc .
+
+RUN chmod +x ./entrypoint.sh
+
+ENTRYPOINT ["sh", "entrypoint.sh"]
+
