@@ -1,232 +1,392 @@
-# indian-insurance
-Backend for Indian Insurance Company
-This has been implemented using Flask.
+# Indian Insurance
 
-# Python Version
-3.10.6
+- A full-stack insurance registration platform built with Flask, providing REST APIs for user sign-up, email verification, and email blacklisting.
+- Includes asynchronous email delivery via Celery, Swagger API documentation, and a fully containerized Docker deployment.
 
-# Testing Platform
+---
 
-1. OS - Ubuntu 22.04
-2. Docker Compose version v2.17.3
-3. Docker version 23.0.6
+## Table of Contents
 
-# Python Packages Used
-- flask
-- flask-sqlalchemy
-- flask-migrate
-- flask-wtf
-- flask-mail
-- gunicorn
-- flask-cors
-- pytest
-- pytest-cov
-- email-validator
-- python-dotenv
-- celery
-- redis
-- flask-restx
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Environment Setup](#environment-setup)
+  - [Running the Application](#running-the-application)
+- [API Reference](#api-reference)
+  - [Sign Up](#1-sign-up)
+  - [Verify Email](#2-verify-email)
+  - [Blacklist Email](#3-blacklist-email)
+- [Database Schema](#database-schema)
+- [Project Structure](#project-structure)
+- [Email Flow](#email-flow)
+- [Validation Rules](#validation-rules)
+- [Testing](#testing)
+- [Make Targets](#make-targets)
+- [Design Decisions](#design-decisions)
+- [License](#license)
 
-# Webserver
-gunicorn
-Gunicorn configuration is found under apps/config/gunicorn_conf.py
+---
 
-# Sending email
-Ref: https://mailtrap.io/blog/flask-email-sending/ and gmail.
+## Architecture
 
-Note: Along with sending email, email template is also stored locally as a file.
-
-Verification email file -> ./backend/verification_email.txt
-Email email file -> ./backend/welcome_email.txt
-
-# Celery Worker
-celery -A wsgi.celery worker --pool=solo --loglevel=info
-
-# Source Code Folder Structure
-
-```bash
-|-- LICENSE
-|-- Makefile
-|-- README.md
-|-- backend
-|   |-- Dockerfile
-|   |-- apps
-|   |   |-- __init__.py
-|   |   |-- config
-|   |   |   |-- config.py
-|   |   |   |-- gunicorn_conf.py
-|   |   |   `-- logging.conf
-|   |   |-- templates
-|   |   |   `-- base.html
-|   |   `-- user
-|   |       |-- dao.py
-|   |       |-- data_validation.py
-|   |       |-- errors.py
-|   |       |-- forms.py
-|   |       |-- models.py
-|   |       |-- routes.py
-|   |       |-- schema_validation.py
-|   |       `-- templates
-|   |           `-- user
-|   |               |-- blacklist.html
-|   |               |-- home.html
-|   |               |-- register.html
-|   |               |-- verification.html
-|   |               `-- welcome.html
-|   |-- entrypoint.sh
-|   |-- migrations
-|   |   |-- README
-|   |   |-- alembic.ini
-|   |   |-- env.py
-|   |   |-- script.py.mako
-|   |   `-- versions
-|   |       |-- 2326888c8dad_.py
-|   |       |-- 61cd9afb9169_recreating_migrations_due_to_sqlite_.py
-|   |       `-- 6a275c9c288c_update_userprofile_model.py
-|   |-- requirements.txt
-|   |-- tests
-|   |   |-- __init__.py
-|   |   |-- conftest.py
-|   |   |-- functional
-|   |   |   `-- __init__.py
-|   |   |-- pytest.ini
-|   |   |-- sample_test_schema
-|   |   |   |-- invalid_json.csv
-|   |   |   `-- not_supported_content_types.csv
-|   |   `-- unit
-|   |       |-- __init__.py
-|   |       `-- user
-|   |           |-- __init__.py
-|   |           `-- test_post.py
-|   |-- utils
-|   |   |-- __init__.py
-|   |   |-- email.py
-|   |   |-- http_status.py
-|   |   |-- insurance_logger.py
-|   |   |-- password_helper.py
-|   |   |-- security.py
-|   |   |-- token.py
-|   |   `-- validation.py
-|   `-- wsgi.py
-|-- database
-|   `-- init.sql
-`-- docker-compose.yaml
+```
+┌──────────┐       ┌──────────────┐       ┌───────────┐
+│  Client   │──────▶│ Flask + RESTX │──────▶│  MySQL 8  │
+│ (Browser/ │◀──────│  (Gunicorn)   │◀──────│   :3308   │
+│  Postman) │       │    :5000      │       └───────────┘
+└──────────┘       └──────┬───────┘
+                          │  Celery task
+                          ▼
+                   ┌──────────────┐       ┌───────────┐
+                   │  RabbitMQ    │──────▶│  Celery    │──▶ SMTP (Email)
+                   │    :5672     │       │  Worker    │
+                   └──────────────┘       └───────────┘
+                          ▲
+                   ┌──────┴───────┐
+                   │    Redis     │  (Result backend)
+                   │    :6379     │
+                   └──────────────┘
 ```
 
-# Assumptions
-- I have supported 'content-type' with 'application/json' only.
-- Registration mail like is valid for configurable number of seconds.
-- For blacklisted emails, we are sending https status code 422 with message
-  saying "Email Validation Failed. You are not allowed to create an account with us."
-- Insurance Plan is NOT pre populated in DB, So user can use any new name for it. Also
-  insurance plan name is not unique in DB.
-- Validation for Indian Currency is not done because any insurance amount is valid amount
-  due to denominations of Rs 1 & 2. 
+| Service     | Image / Build       | Port       | Purpose                          |
+|-------------|---------------------|------------|----------------------------------|
+| **backend** | `./backend`         | 5000       | Flask API server (Gunicorn)      |
+| **mysql-db**| `mysql:8.0.29`      | 3308→3306  | Primary database                 |
+| **db-admin**| `phpmyadmin:latest` | 8080→80    | Database management UI           |
+| **redis**   | `redis:latest`      | 6379       | Celery result backend            |
+| **rabbitmq**| `rabbitmq:latest`   | 5672       | Celery message broker            |
+| **worker**  | `./email_worker`    | —          | Async email sending via Celery   |
 
-# DB Schema
-1. User
-    id, integer, PK
-    customer_name, string(40), not null
-    customer_name, string(40), not null
-    email_address, string(60), indexed, unique, not null
-    password, string(100), unique, not null
+---
 
-2. User
-    id, integer, PK
-    activated, bool, not null, default=False
-    
-    FK - User.id
+## Tech Stack
 
-3. InsurancePlan
-    id, integer, PK
-    insurance_plan_name, string(200), not null
-    
-4. Insurance
-    id, integer, PK
-    insured_amount, integer, not null
-    
-    FK - User.id, InsurancePlan.id
+| Layer          | Technology                                              |
+|----------------|---------------------------------------------------------|
+| Language       | Python 3.8+                                             |
+| Web Framework  | Flask 2.3, Flask-RESTX 1.1 (Swagger UI)                |
+| ORM            | SQLAlchemy 2.0, Flask-SQLAlchemy 3.0                    |
+| Migrations     | Alembic via Flask-Migrate                               |
+| Task Queue     | Celery 5.2 + RabbitMQ (broker) + Redis (result backend) |
+| Email          | Flask-Mail (SMTP)                                       |
+| Web Server     | Gunicorn (auto-scaled to CPU cores)                     |
+| Database       | MySQL 8.0 (production), SQLite (dev/testing)            |
+| Testing        | pytest, coverage                                        |
+| Containerization | Docker, Docker Compose                                |
 
-5. Blacklist
-    id, integer, PK
-    email_address, string(60), indexed, unique, not null
-    reason, string(100), null
+---
 
-# Best Practices followed
-01. Production web server gunicorn
-02. Normalized DB Schema
-03. Python Logging - Console and File
-04. Hashing of generated password
-05. Use of exception handling
-06. Proper HTTP status codes
-07. Doc string added for all modules and methods
-08. Type annotations are added for all methods.
-09. Docker with docker compose used. Both Sqlite and production db mysql is used.
-10. Use of environment variables.
-11. Unit tests with coverage report
-12. Detailed README file.
-13. Proper git commit messages. Every commit is done post completing a functionality.
-14. Pep8 naming convention for modules, classes, methods, functions and variables.
-15. Comments added wherever required.
-16. Use of sqlalchemy transaction for rollback if failure.
-17. Use of Makefile to each in using the application.
-18. Manual steps are minimal while testing the app.
-19. Proper directory and file structure of source code.
-20. Import statements are in order.
-    - Python core -> flask -> flask third party -> application modules
+## Getting Started
 
-    Also related modules are imported in order.
-21. Sending Email is done by using background tasks using Celery, RabbitMQ, Redis.
-22. Different configurations for differnent environments like Dev, test, QA, Production.
-23. API documentation using swagger
+### Prerequisites
 
-# Extras Done
-1. App is deployed live on https://indian-insurance.onrender.com/api/user/register
-2. A blacklist api endpoint is provided. See below. 
+- Docker & Docker Compose
+- Git
 
-# Validations Done
-01. Not a Json Format
-02. Invalid Json Format
-03. Extra attribute is passed in request.
-04. Required attribute is not passed in request.
-05. Customer Name attribute has more than 2 spaces.
-06. Customer Name attribute's is greator than 50 characters.
-07. Email address is in invalid format.
-08. Email attribute's is greator than 50 characters.
-09. Insurance plan name is more than 200 characters.
-10. Insured Amount is more than 50000
-11. Data type validation for json body
-12. Blacklisted email
-13. Duplicated email during registration are validated.
+### Environment Setup
 
-# Testing
-- This app is tested on Ubuntu 22.04 LTS.
-- Automated unit tests have been written using pytest.
-- Automated Unit test coverage is 42%.
+1. Clone the repository:
+   ```bash
+   git clone <repo-url>
+   cd indian-insurance
+   ```
 
-# HTTP Status code used
-- HTTP_200_OK = 200
-- HTTP_201_CREATED = 201
-- HTTP_400_BAD_REQUEST = 400
-- HTTP_404_NOT_FOUND = 404
-- HTTP_422_UNPROCESSABLE_ENTITY = 422
-- HTTP_500_INTERNAL_SERVER_ERROR = 500
+2. Create environment files from the sample:
+   ```bash
+   cp backend/.env.sample backend/.env.dev
+   cp backend/.env.sample backend/.env.aut_test
+   ```
 
-## How to Test
+3. Configure the following variables in `backend/.env.dev`:
 
-1. Clone the repo
-2. Checkout branch 'development'
-3. Go to root directory 'indian-insurance'.
+   | Variable                    | Example                              | Description                        |
+   |-----------------------------|--------------------------------------|------------------------------------|
+   | `SECRET_KEY_DEV`            | `my-secret-key`                      | Flask secret key for sessions      |
+   | `SECURITY_PASSWORD_SALT_DEV`| `my-salt-value`                      | Salt for token generation          |
+   | `DB_TYPE_DEV`               | `mysql`                              | `sqlite` or `mysql`                |
+   | `MYSQL_USER_DEV`            | `root`                               | MySQL user                         |
+   | `MYSQL_HOST_DEV`            | `mysql-db`                           | MySQL host (Docker service name)   |
+   | `MYSQL_PORT_DEV`            | `3306`                               | MySQL port inside Docker network   |
+   | `MYSQL_DB_DEV`              | `indianinsurance`                    | Database name                      |
+   | `MAIL_SERVER_DEV`           | `smtp.mailtrap.io`                   | SMTP server                        |
+   | `MAIL_PORT_DEV`             | `587`                                | SMTP port                          |
+   | `MAIL_USERNAME_DEV`         | *your SMTP username*                 | SMTP credentials                   |
+   | `MAIL_PASSWORD_DEV`         | *your SMTP password*                 | SMTP credentials                   |
+   | `CELERY_BROKER_URL_DEV`     | `amqp://guest:guest@rabbitmq:5672//` | RabbitMQ connection                |
+   | `CELERY_RESULT_BACKEND_DEV` | `redis://redis:6379/0`               | Redis connection                   |
+   | `EMAIL_TOKEN_EXPIRATION_DEV`| `3600`                               | Token validity in seconds          |
+   | `PASSWORD_LENGTH_DEV`       | `12`                                 | Auto-generated password length     |
 
-I have used 'www.gmail.com' with some tweaks to emails.
+### Running the Application
 
-# Webserver
-gunicorn
-Gunicorn configuration is found under apps/config/gunicorn_conf.py
+```bash
+# Start all services (builds images, runs migrations, starts server)
+make run
 
-# Assumption Made
-'Content-Type' header value must be 'application/json' otherwise exception will be raised.
-# Validations Done
-1. Invalid POST request
-    Request -> Invalid Json
-    Response -> 400 Status Code with error message
+# Or equivalently:
+docker compose up -d --build --remove-orphans
+```
+
+Once running:
+- **API + Swagger UI** → http://localhost:5000
+- **phpMyAdmin** → http://localhost:8080
+
+---
+
+## API Reference
+
+All API endpoints are documented via Swagger at `http://localhost:5000` when the app is running.
+
+### 1. Sign Up
+
+Register a new customer with an insurance plan.
+
+```
+POST /api/register/
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "customer_name": "John Doe",
+  "email_address": "john.doe@example.com",
+  "insurance_plan_name": "Family",
+  "insured_amount": 300000
+}
+```
+
+---
+
+### 2. Verify Email
+
+Verify a user's email address using the token from the verification email.
+
+```
+GET /api/verify/<token>
+```
+
+**Responses:**
+
+| Status | Description                                     |
+|--------|-------------------------------------------------|
+| 200    | Account activated (or already activated)         |
+| 404    | Invalid or expired token                         |
+| 500    | Internal server error                            |
+
+---
+
+### 3. Blacklist Email
+
+Add an email address to the blacklist to prevent future sign-ups.
+
+```
+POST /api/blacklist/
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "email_address": "spammer@example.com",
+  "reason": "Fraudulent activity"
+}
+```
+
+**Responses:**
+
+| Status | Description                          |
+|--------|--------------------------------------|
+| 200    | Email blacklisted successfully       |
+| 400    | Validation error or already listed   |
+| 500    | Internal server error                |
+
+---
+
+## Database Schema
+
+```
+┌─────────────┐       ┌─────────────────┐
+│    User      │       │   UserProfile    │
+├─────────────┤       ├─────────────────┤
+│ id (PK)      │◀──1:1─│ id (PK)          │
+│ customer_name│       │ activated (bool)  │
+│ email_address│       │ customerprofile_id│
+│ password     │       │   (FK → User.id)  │
+└──────┬──────┘       └─────────────────┘
+       │
+       │ 1:M
+       ▼
+┌──────────────┐       ┌─────────────────┐
+│  Insurance    │       │  InsurancePlan   │
+├──────────────┤       ├─────────────────┤
+│ id (PK)       │  M:1  │ id (PK)          │
+│ insured_amount│──────▶│insurance_plan_name│
+│ user_id       │       └─────────────────┘
+│  (FK→User.id) │
+│ insurance_plan_id│
+│  (FK→InsurancePlan.id)│
+└──────────────┘
+
+┌──────────────┐
+│  Blacklist    │
+├──────────────┤
+│ id (PK)       │
+│ email_address  │  (unique, indexed)
+│ reason         │
+└──────────────┘
+```
+
+---
+
+## Project Structure
+
+```
+indian-insurance/
+├── docker-compose.yaml          # Multi-container orchestration
+├── Makefile                     # Build/run/test shortcuts
+├── backend/
+│   ├── Dockerfile               # Python 3.8 Alpine + MySQL client
+│   ├── entrypoint.sh            # Runs migrations → starts Gunicorn
+│   ├── wsgi.py                  # WSGI entry point + Celery import
+│   ├── requirements.txt         # Python dependencies
+│   ├── .env.sample              # Environment variable template
+│   ├── pytest.ini               # Test markers configuration
+│   ├── .coveragerc              # Coverage settings
+│   ├── apps/
+│   │   ├── __init__.py          # App factory (create_app)
+│   │   ├── config/
+│   │   │   ├── config.py        # Dev & Test configurations
+│   │   │   ├── gunicorn_conf.py # Gunicorn (auto-scaled workers)
+│   │   │   └── logging.conf     # Logging configuration
+│   │   ├── templates/
+│   │   │   └── base.html        # Bootstrap 5.3 base template
+│   │   └── user/
+│   │       ├── routes.py        # Blueprint + namespace registration
+│   │       ├── models.py        # SQLAlchemy models
+│   │       ├── dao.py           # Data Access Objects (DAO pattern)
+│   │       ├── schema_validation.py  # JSON schema validation decorator
+│   │       ├── data_validation.py    # Business rule validation decorator
+│   │       ├── errors.py        # Custom error handlers
+│   │       ├── forms.py         # Flask-WTF form definitions
+│   │       ├── apis/
+│   │       │   ├── namespaces/  # Flask-RESTX namespaces
+│   │       │   │   ├── sign_up_namespace.py
+│   │       │   │   ├── verify_namespace.py
+│   │       │   │   └── blacklist_namespace.py
+│   │       │   └── api_models/
+│   │       │       └── sign_up.py  # Request/response models
+│   │       └── templates/user/  # Email & web templates
+│   ├── migrations/              # Alembic migrations
+│   ├── tests/
+│   │   ├── conftest.py          # Fixtures (app, client, db, session)
+│   │   ├── unit/user/           # Unit tests
+│   │   └── sample_test_schema/  # CSV test data
+│   └── utils/
+│       ├── email.py             # Celery email task
+│       ├── token.py             # Token generation & validation
+│       ├── security.py          # Password hashing (Werkzeug)
+│       ├── password_helper.py   # Random password generator
+│       ├── insurance_logger.py  # Singleton logger
+│       ├── validation.py        # Email format validator
+│       └── http_status.py       # HTTP status code constants
+├── database/
+│   └── init.sql                 # CREATE DATABASE indianinsurance
+└── email_worker/
+    ├── Dockerfile               # Python 3.10 + Celery worker
+    ├── config.py                # Broker & SMTP configuration
+    └── worker.py                # Celery task: send email via Flask-Mail
+```
+
+---
+
+## Email Flow
+
+1. **User signs up** via `POST /api/register/`
+2. Backend generates a time-limited token (using `itsdangerous`) and queues an email task to **Celery**.
+3. **RabbitMQ** brokers the task to the **Celery Worker** container.
+4. The worker sends a verification email via **SMTP** (Flask-Mail).
+5. User clicks the verification link → `GET /api/verify/<token>`
+6. Token is validated; user profile is marked as **activated**.
+7. A welcome email is sent upon successful activation.
+
+---
+
+## Validation Rules
+
+The API enforces validation at multiple layers via decorators:
+
+### Schema Validation (HTTP + JSON structure)
+| Rule                                    | HTTP Status |
+|-----------------------------------------|-------------|
+| `Content-Type` must be `application/json` | 400       |
+| Request body must be valid JSON           | 400       |
+| No unexpected attributes allowed          | 400       |
+| All required attributes must be present   | 400       |
+| Attribute data types must match           | 400       |
+
+### Data Validation (Business rules)
+| Rule                                        | HTTP Status |
+|---------------------------------------------|-------------|
+| Customer name ≤ 50 characters               | 400         |
+| Customer name has at most 2 spaces          | 400         |
+| Email address is in valid format            | 400         |
+| Email address ≤ 50 characters               | 400         |
+| Insurance plan name ≤ 200 characters        | 400         |
+| Insured amount ≤ 5,000,000 INR             | 400         |
+| Email is not blacklisted                    | 422         |
+| Email is not already registered             | 400         |
+
+---
+
+## Testing
+
+Tests use **pytest** with fixtures that provide an isolated Flask app, test client, and transactional database session with automatic rollback.
+
+```bash
+# Run all tests
+make test
+
+# Run tests with coverage report
+make cov
+```
+
+**Test markers** (defined in `pytest.ini`):
+- `config` — Configuration validation tests
+- `schema_validation` — JSON schema tests
+- `data_validation` — Business rule tests
+- `database` — Database operation tests
+
+**Test data** is stored as CSV files in `tests/sample_test_schema/` for parametrized tests.
+
+---
+
+## Make Targets
+
+| Command      | Description                                        |
+|--------------|----------------------------------------------------|
+| `make run`   | Build and start all containers                     |
+| `make stop`  | Stop all containers                                |
+| `make clean` | Stop containers, prune images and containers       |
+| `make test`  | Run pytest inside the backend container            |
+| `make cov`   | Run tests with coverage report                     |
+| `make all`   | Stop and restart (default target)                  |
+
+---
+
+## Design Decisions
+
+- **DAO Pattern** — All database operations are isolated in dedicated DAO classes, keeping business logic decoupled from data access.
+- **Decorator-based Validation** — `@validate_schema` and `@validate_data` decorators provide layered request validation without cluttering endpoint logic.
+- **App Factory Pattern** — `create_app()` enables different configurations for development, testing, and production.
+- **Singleton Logger** — `InsuranceLogger` ensures a single logging instance across the application with both console and file output.
+- **Async Email** — Celery + RabbitMQ offloads email sending to avoid blocking API responses.
+- **Transactional DAO** — Database operations use SQLAlchemy's `session.begin()` context manager for automatic rollback on failure.
+- **Environment-based Config** — Separate `.env` files for dev and testing with config classes mapped by environment name.
+
+---
+
+## License
+
+Copyright © 2026 Dilip Kumar Sharma. All rights reserved.
